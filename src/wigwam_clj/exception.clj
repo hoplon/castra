@@ -67,7 +67,7 @@
 (defn ex->clj
   "Get exception properties and data as a clj map."
   [e]
-  (let [e (if (isa? (:type (ex-data e)) ::exception) e (ex ::fatal))
+  (let [e (if (isa? (:type (ex-data e)) ::exception) e (ex ::fatal :cause e))
         p (ex-data e)
         t (:type p)
         m (.getMessage e)
