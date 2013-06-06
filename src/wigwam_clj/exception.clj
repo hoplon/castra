@@ -83,7 +83,7 @@
 (defn csrf []
   (ex ::csrf :message "Bad CSRF token."))
 
-(defn login [& [message & [data cause]]]
+(defn login [& [message data cause]]
   (ex ::login :message (or message "Wrong username or password.") :data data))
 
 (defn error [& [message data cause]]
