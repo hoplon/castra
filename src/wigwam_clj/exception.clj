@@ -73,7 +73,7 @@
         m (.getMessage e)
         s (ex-severity t)
         d (:data p)
-        c (when-let [cc (.getCause e)] (.getMessage cc))]
+        c (some-> (.getCause e) .getMessage)]
     {:type t :message m :severity s :data d :cause c}))
 
 ;; exceptions
