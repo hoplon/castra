@@ -4,7 +4,7 @@
 (defmulti ex-message  identity)
 (defmulti ex-severity identity)
 
-(defmacro defstatus
+(defmacro defex
   [type code & [severity message]]
   (let [ex?    (isa? code ::exception)
         class* (if ex? code ::exception)
@@ -17,15 +17,15 @@
        (defmethod ex-message ~type [_#] ~msg*)
        (defmethod ex-severity ~type [_#] ~svr*))))
 
-(defstatus ::csrf     403 :error "Bad CSRF token.")
-(defstatus ::auth     403 :error "Please log in to continue.")
-(defstatus ::ignore   500 :ignore)
-(defstatus ::debug    500 :debug)
-(defstatus ::info     500 :info)
-(defstatus ::notice   500 :notice)
-(defstatus ::warning  500 :warning)
-(defstatus ::error    500 :error)
-(defstatus ::fatal    500 :fatal)
+(defex ::csrf     403 :error "Bad CSRF token.")
+(defex ::auth     403 :error "Please log in to continue.")
+(defex ::ignore   500 :ignore)
+(defex ::debug    500 :debug)
+(defex ::info     500 :info)
+(defex ::notice   500 :notice)
+(defex ::warning  500 :warning)
+(defex ::error    500 :error)
+(defex ::fatal    500 :fatal)
 
 (defn ex
   "Create new wigwam exception."
@@ -48,3 +48,7 @@
         c (some-> (.getCause e) .getMessage)]
     {:type t :isa a :message m :severity s :data d :cause c}))
 
+(comment
+  ;; inheritance: use code and severity of fatal ex
+  (defex ::more-fatal ::fatal nil "A most serious error happened.")
+  )
