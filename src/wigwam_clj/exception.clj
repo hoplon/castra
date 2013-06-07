@@ -17,7 +17,7 @@
        (defmethod ex-message ~type [_#] ~msg*)
        (defmethod ex-severity ~type [_#] ~svr*))))
 
-(defex ::csrf     403 :error "Bad CSRF token.")
+(defex ::csrf     403 :error "There was a problem. Are cookies disabled?")
 (defex ::auth     403 :error "Please log in to continue.")
 (defex ::ignore   500 :ignore)
 (defex ::debug    500 :debug)
