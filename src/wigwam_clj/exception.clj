@@ -36,10 +36,8 @@
   [type & more]
   (let [message (find-first string? more)
         data    (find-first map? more)
-        cause   (find-first (partial instance? Throwable) more)
-        message (or message (ex-message type))
-        data    {:type type :data data}]
-    (ex-info message data cause)))
+        cause   (find-first (partial instance? Throwable) more)]
+    (ex-info (or message (ex-message type)) {:type type :data data} cause)))
 
 (defn ex->clj
   "Get exception properties and data as a clj map."
