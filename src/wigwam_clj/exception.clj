@@ -60,4 +60,7 @@
 
   ;; use code and message of fatal ex, but not severity
   (defex ::less-fatal ::fatal :warning)
+
+  ;; throw a wigwam exception
+  (throw (ex ::warning "Be careful with that!" {:thing 1 :other 2}))
   )
