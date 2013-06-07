@@ -37,19 +37,20 @@
   (let [message (find-first string? more)
         data    (find-first map? more)
         cause   (find-first (partial instance? Throwable) more)]
-    (ex-info (or message (ex-message type)) {:type type :data data} cause)))
+    (ex-info (or message (ex-message type)) {::type type ::data data} cause)))
 
 (defn ex->clj
   "Get exception properties and data as a clj map."
   [e]
-  (let [e (if (isa? (:type (ex-data e)) ::exception) e (ex ::fatal e))
+  (let [e (if (isa? (::type (ex-data e)) ::exception) e (ex ::fatal e))
         p (ex-data e)
-        t (:type p)
+        t (::type p)
         a (ancestors t)
         m (.getMessage e)
         s (ex-severity t)
-        d (:data p)
-        c (some-> (.getCause e) .getMessage)]
+        d (::data p)
+        c (loop [cx (.getCause e), cc []]
+            (if cx (recur (.getCause cx) (conj cc (.getMessage cx))) cc))]
     {:type t :isa a :message m :severity s :data d :cause c}))
 
 (comment
