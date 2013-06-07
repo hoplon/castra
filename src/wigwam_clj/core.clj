@@ -1,8 +1,14 @@
 (ns wigwam-clj.core
   (:gen-class)
   (:require
-    [clojure.pprint     :refer [pprint]]
-    [ring.adapter.jetty :refer [run-jetty]]))
+    [wigwam-clj.exception   :as w   :refer [defex extend-ex ex ex->clj]]
+    [clojure.pprint         :as pp  :refer [pprint]]
+    [ring.adapter.jetty     :as jt  :refer [run-jetty]]))
+
+(extend-ex ::foop :wigwam-clj.exception/ignore "Foop happens.")
+
+(defn doit []
+  (throw (ex ::foop "hello world")))
 
 (defn pp
   [form]
