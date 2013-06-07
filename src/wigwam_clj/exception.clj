@@ -4,10 +4,12 @@
 (defmulti ex-message  identity)
 (defmulti ex-severity identity)
 
+(defn find-first [pred? coll] (first (filter pred? coll)))
+
 (defmacro defex
   [type code & more]
-  (let [message   (first (filter string? more))
-        severity  (first (filter keyword? more))
+  (let [message   (find-first string? more)
+        severity  (find-first keyword? more)
         ex?       (isa? code ::exception)
         class*    (if ex? code ::exception)
         code*     (if ex? (ex-status code) code)
@@ -32,9 +34,9 @@
 (defn ex
   "Create new wigwam exception."
   [type & more]
-  (let [message (first (filter string? more))
-        data    (first (filter map? more))
-        cause   (first (filter (partial instance? Throwable) more))
+  (let [message (find-first string? more)
+        data    (find-first map? more)
+        cause   (find-first (partial instance? Throwable) more)
         m (or message (ex-message type))
         d {:type      type
            :data      data}]
