@@ -14,7 +14,7 @@
 (def error      ::error)
 (def fatal      ::fatal)
 
-(defex exception {:status 500 :severity :error} "Server error.")
+(defex exception "Server error." {:status 500 :severity :error})
 
 (extend-ex csrf       exception {:status 403} "There was a problem. Are cookies disabled?")
 (extend-ex auth       exception {:status 403} "Please log in to continue.")
