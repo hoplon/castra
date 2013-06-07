@@ -63,4 +63,5 @@
 
   ;; throw a wigwam exception
   (throw (ex ::warning "Be careful with that!" {:thing 1 :other 2}))
+
   )
