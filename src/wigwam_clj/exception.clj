@@ -18,7 +18,6 @@
        (defmethod ex-severity ~type [_#] ~svr*))))
 
 (defstatus ::csrf     403 :error "Bad CSRF token.")
-(defstatus ::login    403 :error "Bad username or password.")
 (defstatus ::auth     403 :error "Please log in to continue.")
 (defstatus ::ignore   500 :ignore)
 (defstatus ::debug    500 :debug)
