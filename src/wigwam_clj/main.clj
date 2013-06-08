@@ -1,7 +1,6 @@
 (ns wigwam-clj.main
   (:require
     [wigwam-clj.core                :as wc]
-    [wigwam-clj.foo                 :as wf]
     [ring.adapter.jetty             :as rj]
     [ring.middleware.session        :as rs]
     [ring.middleware.session.cookie :as rk]))
