@@ -1,17 +1,25 @@
 (ns wigwam-clj.core
   (:gen-class)
   (:require
-    [clojure.string                 :as string]
-    [clojure.data.json              :as json]
-    [ring.util.codec                :as rc]
-    [wigwam-clj.exception           :as wx]
-    [wigwam-clj.request             :as wr :refer [*request* *session*]]
-    [tailrecursion.extype           :as ex :refer [ex ex->clj]]))
+    [clojure.string       :as string]
+    [clojure.data.json    :as json]
+    [clojure.set          :as cs :refer [intersection difference]]
+    [ring.util.codec      :as rc]
+    [wigwam-clj.exception :as wx]
+    [wigwam-clj.request   :as wr :refer [*request* *session*]]
+    [tailrecursion.extype :as ex :refer [ex ex->clj]]))
 
 (defn path->sym
   [path]
-  (when (re-find #"^/[^/]+/[^/]+$" path)
-    (-> path (subs 1) rc/url-decode symbol)))
+  (when-let [path (second (re-find #"^(?:/[^/]+)*/([^/]+/[^/]+)$" path))] 
+    (-> path rc/url-decode symbol)))
+
+(defn wrap-post
+  [handler]
+  (fn [request]
+    (if (= :post (:request-method request))
+      (handler request)
+      {:status 404 :headers {} :body ""})))
 
 (defn wrap-json
   [handler]
@@ -37,14 +45,14 @@
 
 (defn select-vars
   [nsname & {:keys [only exclude]}]
-  (let [var-pubs  #(do (require %) (vals (ns-publics %)))
+  (let [var-fn?   #(fn? (var-get %))
         to-var    #(resolve (symbol (str nsname) (str %)))
-        to-vars   #(keep identity (map to-var %))
-        var-fn?   #(fn? (var-get %))
-        test?     #(fn [x] (if (seq %1) (contains? (set %) x) %2))]
-    (->> (var-pubs nsname)
-      (filter (test? (to-vars only) true))
-      (remove (test? (to-vars exclude) false)))))
+        to-vars   #(->> % (map to-var) (keep identity) set)
+        var-pubs  #(do (require %) (vals (ns-publics %))) 
+        vars      (->> nsname var-pubs (filter var-fn?) set)
+        only      (if (seq only) (to-vars only) vars)
+        exclude   (if (seq exclude) (to-vars exclude) #{})]
+    (-> vars (intersection only) (difference exclude))))
 
 (defn wigwam
   [& namespaces]

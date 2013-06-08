@@ -1,18 +1,23 @@
 (ns wigwam-clj.main
   (:require
-    [wigwam-clj.core                :as wc]
     [ring.adapter.jetty             :as rj]
+    [ring.middleware.resource       :as rr]
     [ring.middleware.session        :as rs]
-    [ring.middleware.session.cookie :as rk]))
+    [ring.middleware.session.cookie :as rk]
+    [ring.middleware.file           :as rf]
+    [ring.middleware.file-info      :as rg :refer [wrap-file-info]]
+    [wigwam-clj.core                :as wc :refer [wrap-json wrap-post]]))
 
-(def cookie-store (rk/cookie-store {:key "a 16-byte secret"}))
-(def wrap-session #(rs/wrap-session % {:store cookie-store}))
-(def wigwam       (wc/wigwam '[clojure.core :only [inc]] 'wigwam-clj.foo))
+(def cookie-store   (rk/cookie-store {:key "a 16-byte secret"}))
+(def wrap-session   #(rs/wrap-session % {:store cookie-store}))
+(def wrap-resource  #(rr/wrap-resource % "public"))
+(def wigwam         (wc/wigwam '[clojure.core :only [inc]] 'wigwam-clj.foo))
+(def app            (-> wigwam wrap-json wrap-session wrap-post wrap-resource wrap-file-info))
 
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
   ;; work around dangerous default behaviour in Clojure
   (alter-var-root #'*read-eval* (constantly false))
-  (rj/run-jetty (-> wigwam wc/wrap-json wrap-session) {:port 3000}))
+  (rj/run-jetty app {:port 3000}))
 
