@@ -7,20 +7,17 @@
 
 ;; rules ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn login!
-  [login passwd]
+(defn login! [login passwd]
   (if (= passwd "foop")
     (swap! *request* (fnil assoc-in {}) [:session :login] login)
     (throw (ex wx/auth "Incorrect username or password."))))
 
-(defn logged-in?
-  []
+(defn logged-in? []
   (or (get-in @*request* [:session :login]) (throw (ex wx/auth))))
 
 ;; API methods ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn login
-  [user pass]
+(defn login [user pass]
   {:pre [(when-http (login! user pass))]}
   "Congratulations, you're logged in.")
 
