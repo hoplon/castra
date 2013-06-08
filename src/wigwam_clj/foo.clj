@@ -3,7 +3,7 @@
     [clojure.pprint       :as pp]
     [wigwam-clj.exception :as wx]
     [tailrecursion.extype :as ex  :refer [ex]]
-    [wigwam-clj.request   :as rpc :refer [*request*]]))
+    [wigwam-clj.request   :as rpc :refer [*request* *session*]]))
 
 ;; rules ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -12,28 +12,34 @@
 
 (defn login! [login passwd]
   (if (= passwd "foop")
-    (swap! *request* assoc-in [:session :login] login)
+    (swap! *session* assoc :login login)
     (throw (ex wx/auth "Incorrect username or password."))))
 
 (defn logout! []
-  (swap! *request* assoc :session nil))
+  (swap! *session* assoc :login nil))
 
 (defn logged-in? []
-  (pp/pprint (get @*request* :session))
-  (or (get-in @*request* [:session :login]) (throw (ex wx/auth))))
+  (pp/pprint @*session*)
+  (or (get @*session* :login) (throw (ex wx/auth))))
 
 ;; API methods ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(rpc/defn login [user pass]
+(rpc/defn login
+  "This is a doc comment."
+  [user pass]
   {:rpc [(login! user pass)]
    :pre [(not= user "omfg")]}
   "Congratulations, you're logged in.")
 
-(rpc/defn logout []
+(rpc/defn ^:rpc-test1 logout
+  "Hello world."
+  []
   {:rpc [(logout!)]}
   "Congratulations, you're logged out.")
 
-(rpc/defn test1 [x y]
+(rpc/defn test1
+  "The rain in spain falls mainly on the plain."
+  [x y]
   {:rpc [(logged-in?)]}
   (+ x y))
 

@@ -8,4 +8,4 @@
                  [ring/ring-jetty-adapter "1.1.8"]
                  [org.clojure/data.json   "0.2.2"]
                  [tailrecursion/extype    "0.1.0-SNAPSHOT"]]
-  :main wigwam-clj.core)
+  :main wigwam-clj.main)

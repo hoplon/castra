@@ -1,19 +1,12 @@
 (ns wigwam-clj.core
   (:gen-class)
   (:require
-    [clojure.data.json              :as json]
     [clojure.string                 :as string]
-    [tailrecursion.extype           :as ex :refer [ex ex->clj]]
+    [clojure.data.json              :as json]
+    [ring.util.codec                :as rc]
     [wigwam-clj.exception           :as wx]
     [wigwam-clj.request             :as wr :refer [*request* *session*]]
-    [ring.util.codec                :as rc]
-    [ring.adapter.jetty             :as rj]
-    [ring.middleware.session        :as rs :refer [wrap-session]]
-    [ring.middleware.session.cookie :as rk :refer [cookie-store]]
-    [clojure.pprint                 :as pp]
-    ))
-
-(defn pp [form] (with-out-str (binding [*print-meta* true] (pp/pprint form))))
+    [tailrecursion.extype           :as ex :refer [ex ex->clj]]))
 
 (defn path->sym
   [path]
@@ -31,38 +24,39 @@
         (assoc-in [:headers "Content-Type"] "application/json")))))
 
 (defn do-rpc
-  [path args]
+  [vars path args]
   (if-not (vector? args)
-    (throw (ex wx/fatal "Arglist must be a vector.")))
-  (if-let [sym (path->sym path)]
-    (do
-      (require (symbol (namespace sym))) 
-      (if-let [f (resolve sym)]
-        (do
-          (if-not (:rpc (meta f)) (reset! *request* nil))
-          (apply f args)) 
-        (throw (ex wx/fatal "Can't resolve var.")))) 
-    (throw (ex wx/fatal "Invalid symbol."))))
+    (throw (ex wx/fatal (ex wx/error "Arglist must be a vector."))))
+  (let [bad! #(throw (ex wx/fatal (ex wx/not-found)))
+        sym  (or (path->sym path) (bad!))]
+    (require (symbol (namespace sym)))
+    (let [f (or (resolve sym) (bad!))]
+      (or (contains? vars f) (bad!))
+      (if-not (:rpc (meta f)) (reset! *request* nil)) 
+      (apply f args))))
+
+(defn select-vars
+  [nsname & {:keys [only exclude]}]
+  (let [var-pubs  #(do (require %) (vals (ns-publics %)))
+        to-var    #(resolve (symbol (str nsname) (str %)))
+        to-vars   #(keep identity (map to-var %))
+        var-fn?   #(fn? (var-get %))
+        test?     #(fn [x] (if (seq %1) (contains? (set %) x) %2))]
+    (->> (var-pubs nsname)
+      (filter (test? (to-vars only) true))
+      (remove (test? (to-vars exclude) false)))))
 
 (defn wigwam
-  [request]
-  (binding [*request* (atom request)
-            *session* (atom nil)]
-    (let [resp (try
-                 (do-rpc (:uri request) (:body request))
-                 (catch Throwable e e))
-          ex?  (instance? Throwable resp)
-          xclj (when ex? (ex->clj resp wx/fatal))
-          code (or (:status xclj) 200)
-          body (or xclj resp)
-          sess @*session*]
-      {:status code, :body body, :session sess})))
-
-(def app (-> wigwam wrap-json (wrap-session {:store (cookie-store {:key "a 16-byte secret"})})))
-
-(defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
-  ;; work around dangerous default behaviour in Clojure
-  (alter-var-root #'*read-eval* (constantly false))
-  (rj/run-jetty app {:port 3000}))
+  [& namespaces]
+  (let [seq* #(or (try (seq %) (catch Throwable e)) [%])
+        vars (->> namespaces (map seq*) (mapcat #(apply select-vars %)) set)]
+    (fn [request]
+      (binding [*request* (atom request)
+                *session* (atom (:session request))]
+        (let [resp (try
+                     (do-rpc vars (:uri request) (:body request))
+                     (catch Throwable e e))
+              xclj (when (instance? Throwable resp) (ex->clj resp wx/fatal))]
+          {:status  (or (:status xclj) 200)
+           :body    (or xclj resp)
+           :session @*session*})))))
