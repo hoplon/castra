@@ -1,15 +1,16 @@
 (ns wigwam-clj.core
   (:gen-class)
   (:require
-    [clojure.data.json        :as json]
-    [clojure.string           :as string]
-    [tailrecursion.extype     :as ex :refer [ex ex->clj]]
-    [wigwam-clj.exception     :as wx]
-    [wigwam-clj.request       :as wr :refer [*request*]]
-    [ring.util.codec          :as rc]
-    [ring.adapter.jetty       :as rj]
-    [ring.middleware.session  :as rs :refer [wrap-session]]
-    [clojure.pprint           :as pp]
+    [clojure.data.json              :as json]
+    [clojure.string                 :as string]
+    [tailrecursion.extype           :as ex :refer [ex ex->clj]]
+    [wigwam-clj.exception           :as wx]
+    [wigwam-clj.request             :as wr :refer [*request*]]
+    [ring.util.codec                :as rc]
+    [ring.adapter.jetty             :as rj]
+    [ring.middleware.session        :as rs :refer [wrap-session]]
+    [ring.middleware.session.cookie :as rk :refer [cookie-store]]
+    [clojure.pprint                 :as pp]
     ))
 
 (defn pp [form] (with-out-str (binding [*print-meta* true] (pp/pprint form))))
@@ -17,7 +18,6 @@
 
 (defn path->sym
   [path]
-  (println path)
   (when (re-find #"^/[^/]+/[^/]+$" path)
     (-> path (subs 1) rc/url-decode symbol)))
 
@@ -53,10 +53,10 @@
           xclj (when ex? (ex->clj resp wx/fatal))
           code (or (:status xclj) 200)
           body (or xclj resp)
-          sess (:session @*request*)]
+          sess (get @*request* :session {})]
       {:status code, :body body, :session sess})))
 
-(def app (-> wigwam wrap-json wrap-session))
+(def app (-> wigwam wrap-json (wrap-session {:store (cookie-store {:key "a 16-byte secret"})})))
 
 (defn -main
   "I don't do a whole lot ... yet."
