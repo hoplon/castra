@@ -5,7 +5,7 @@
     [clojure.string                 :as string]
     [tailrecursion.extype           :as ex :refer [ex ex->clj]]
     [wigwam-clj.exception           :as wx]
-    [wigwam-clj.request             :as wr :refer [*request*]]
+    [wigwam-clj.request             :as wr :refer [*request* *session*]]
     [ring.util.codec                :as rc]
     [ring.adapter.jetty             :as rj]
     [ring.middleware.session        :as rs :refer [wrap-session]]
@@ -14,7 +14,6 @@
     ))
 
 (defn pp [form] (with-out-str (binding [*print-meta* true] (pp/pprint form))))
-(defmacro guard [form] `(try ~form (catch Throwable e)))
 
 (defn path->sym
   [path]
@@ -39,13 +38,16 @@
     (do
       (require (symbol (namespace sym))) 
       (if-let [f (resolve sym)]
-        (apply f args)
+        (do
+          (if-not (:rpc (meta f)) (reset! *request* nil))
+          (apply f args)) 
         (throw (ex wx/fatal "Can't resolve var.")))) 
     (throw (ex wx/fatal "Invalid symbol."))))
 
 (defn wigwam
   [request]
-  (binding [*request* (atom request)]
+  (binding [*request* (atom request)
+            *session* (atom nil)]
     (let [resp (try
                  (do-rpc (:uri request) (:body request))
                  (catch Throwable e e))
@@ -53,7 +55,7 @@
           xclj (when ex? (ex->clj resp wx/fatal))
           code (or (:status xclj) 200)
           body (or xclj resp)
-          sess (get @*request* :session {})]
+          sess @*session*]
       {:status code, :body body, :session sess})))
 
 (def app (-> wigwam wrap-json (wrap-session {:store (cookie-store {:key "a 16-byte secret"})})))

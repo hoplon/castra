@@ -2,10 +2,13 @@
   (:require
     [clojure.pprint       :as pp]
     [wigwam-clj.exception :as wx]
-    [wigwam-clj.request   :as wr :refer [when-http *request*]]
-    [tailrecursion.extype :as ex :refer [ex]]))
+    [tailrecursion.extype :as ex  :refer [ex]]
+    [wigwam-clj.request   :as rpc :refer [*request*]]))
 
 ;; rules ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def allow (constantly true))
+(def deny  #(throw (ex wx/auth "You're not allowed to do that.")))
 
 (defn login! [login passwd]
   (if (= passwd "foop")
@@ -21,15 +24,23 @@
 
 ;; API methods ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn login [user pass]
-  {:pre [(when-http (login! user pass))]}
+(rpc/defn login [user pass]
+  {:rpc [(login! user pass)]
+   :pre [(not= user "omfg")]}
   "Congratulations, you're logged in.")
 
-(defn logout []
-  {:pre [(when-http (logout!))]}
+(rpc/defn logout []
+  {:rpc [(logout!)]}
   "Congratulations, you're logged out.")
 
-(defn test1 [x y]
-  {:pre [(when-http (logged-in?))]}
+(rpc/defn test1 [x y]
+  {:rpc [(logged-in?)]}
   (+ x y))
 
+(rpc/defn test2 [x y]
+  {:rpc [(deny)]}
+  (- x y))
+
+(rpc/defn test3 [x y]
+  {:rpc [(allow)]}
+  (test2 x y))
