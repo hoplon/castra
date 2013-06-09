@@ -16,9 +16,7 @@
   {:rpc [(r/logged-in?)]}
   (+ x y))
 
-(rpc/defn test2
-  "Denies all RPC access."
-  [x y]
+(rpc/defn test2 [x y]
   {:rpc [(r/deny)]}
   (- x y))
 
