@@ -3,20 +3,6 @@
     [clojure.data.json              :as j]
     [tailrecursion.castra.exception :as x :refer [ex->clj]]))
 
-(defn wrap-post [handler]
-  (fn [request]
-    (if (= :post (:request-method request))
-      (handler request)
-      {:status 404, :headers {}, :body "404 Not Found"})))
-
-(defn wrap-stacktrace [handler]
-  (fn [request]
-    (let [resp (handler request)]
-      (when (not= 200 (:status resp))
-        (print (:trace (:body resp)))
-        (flush))
-      resp)))
-
 (defn wrap-json [handler]
   (fn [request]
     (let [ct {"Content-Type" "application/json"}

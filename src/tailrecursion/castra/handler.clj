@@ -35,9 +35,11 @@
   (let [seq* #(or (try (seq %) (catch Throwable e)) [%])
         vars (->> namespaces (map seq*) (mapcat #(apply select-vars %)) set)]
     (fn [request]
-      (binding [*request* (atom request), *session* (atom (:session request))]
-        (let [d #(do (csrf!) (do-rpc vars (:body request))) 
-              r (try (d) (catch Throwable e e))
-              x (when (instance? Throwable r) (ex->clj r))
-              h {"X-Csrf" (:x-csrf @*session*)}]
-          {:status (:status x 200), :headers h, :body (or x r), :session @*session*})))))
+      (if (not= :post (:request-method request))
+        {:status 404, :headers {}, :body "404 Not Found"}
+        (binding [*request* (atom request), *session* (atom (:session request))]
+          (let [d #(do (csrf!) (do-rpc vars (:body request))) 
+                r (try (d) (catch Throwable e e))
+                x (when (instance? Throwable r) (ex->clj r))
+                h {"X-Csrf" (:x-csrf @*session*)}]
+            {:status (:status x 200), :headers h, :body (or x r), :session @*session*}))))))

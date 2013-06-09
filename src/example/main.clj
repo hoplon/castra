@@ -6,15 +6,13 @@
     [ring.middleware.session.cookie  :refer [cookie-store]]
     [ring.middleware.file            :refer [wrap-file]]
     [ring.middleware.file-info       :refer [wrap-file-info]]
-    [tailrecursion.castra.middleware :refer [wrap-stacktrace wrap-json wrap-post]]
+    [tailrecursion.castra.middleware :refer [wrap-json]]
     [tailrecursion.castra.handler    :refer [castra]]))
 
 (def app
   (-> (castra '[clojure.core :only [inc]] 'example.api.foo)
-    wrap-stacktrace
     wrap-json
     (wrap-session {:store (cookie-store {:key "a 16-byte secret"})})
-    wrap-post
     (wrap-resource "public")
     wrap-file-info))
 
