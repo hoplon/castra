@@ -13,8 +13,8 @@
 
 (defn do-rpc
   [vars path args]
-  (let [bad!  #(throw (ex wx/fatal (apply ex wx/not-found)))
-        sym   (or (path->sym path) (bad!))]
+  (let [bad! #(throw (ex wx/fatal (apply ex wx/not-found)))
+        sym  (or (path->sym path) (bad!))]
     (let [f (or (resolve sym) (bad!))]
       (or (contains? vars f) (bad!))
       (or (:rpc (meta f)) (reset! *request* nil)) 
