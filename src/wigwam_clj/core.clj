@@ -14,8 +14,8 @@
   (let [bad! #(throw (ex wx/fatal (apply ex wx/not-found)))
         sym  (or (path->sym path) (bad!))
         fun  (or (resolve sym) (bad!))]
-    (or (contains? vars fun) (bad!))
-    (or (:rpc (meta fun)) (reset! *request* nil)) 
+    (when-not (contains? vars fun) (bad!))
+    (when-not (:rpc (meta fun)) (reset! *request* nil)) 
     (apply fun args)))
 
 (defn select-vars [nsname & {:keys [only exclude]}]
