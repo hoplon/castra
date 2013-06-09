@@ -1,9 +1,9 @@
 (ns wigwam-clj.core
   (:gen-class)
   (:require
+    [ring.util.codec      :as rc]
     [clojure.string       :as string]
     [clojure.set          :as cs :refer [intersection difference]]
-    [ring.util.codec      :as rc]
     [wigwam-clj.exception :as wx :refer [ex ex->clj]]
     [wigwam-clj.request   :as wr :refer [*request* *session*]]))
 
