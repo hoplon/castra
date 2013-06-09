@@ -23,7 +23,6 @@
 (rpc/defn test3
   "Calls test2 without triggering 'deny' assertion."
   [x y]
-  {:rpc [(r/allow)]}
   (test2 x y))
 
 (rpc/defn ^:private test4
