@@ -1,4 +1,4 @@
-(defproject wigwam-clj "0.1.0-SNAPSHOT"
+(defproject tailrecursion/castra "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -8,4 +8,4 @@
                  [ring/ring-jetty-adapter "1.1.8"]
                  [org.clojure/data.json   "0.2.2"]
                  [tailrecursion/extype    "0.1.0-SNAPSHOT"]]
-  :main wigwam-clj.main)
+  :main example.main)

@@ -1,10 +1,10 @@
-(ns wigwam-clj.core
+(ns tailrecursion.castra.handler
   (:require
-    [ring.middleware.session.cookie :as rc]
-    [ring.util.codec      :as ru :refer [url-decode base64-encode]]
-    [clojure.set          :as cs :refer [intersection difference]]
-    [wigwam-clj.exception :as wx :refer [ex ex->clj]]
-    [wigwam-clj.request   :as wr :refer [*request* *session*]]))
+    [ring.middleware.session.cookie :as c]
+    [ring.util.codec                :as u :refer [url-decode base64-encode]]
+    [clojure.set                    :as s :refer [intersection difference]]
+    [tailrecursion.castra.exception :as x :refer [ex ex->clj]]
+    [tailrecursion.castra.core      :as r :refer [*request* *session*]]))
 
 (defn path->sym [path]
   (when-let [path (second (re-find #"^(?:/[^/]+)*/([^/]+/[^/]+)$" path))] 
@@ -13,13 +13,13 @@
 (defn csrf! []
   (let [tok1 (get-in @*request* [:headers "x-csrf"])
         tok2 (:x-csrf @*session*)
-        tok! #(base64-encode (#'rc/secure-random-bytes 16))]
+        tok! #(base64-encode (#'c/secure-random-bytes 16))]
     (when-not (and tok1 (= tok1 tok2))
       (swap! *session* assoc :x-csrf (tok!))
-      (throw (ex wx/csrf)))))
+      (throw (ex x/csrf)))))
 
 (defn do-rpc [vars path args]
-  (let [bad! #(throw (ex wx/fatal (ex wx/not-found)))
+  (let [bad! #(throw (ex x/fatal (ex x/not-found)))
         sym  (or (path->sym path) (bad!))
         fun  (or (resolve sym) (bad!))]
     (when-not (contains? vars fun) (bad!))
@@ -36,7 +36,7 @@
         exclude   (if (seq exclude) (to-vars exclude) #{})]
     (-> vars (intersection only) (difference exclude))))
 
-(defn wigwam [& namespaces]
+(defn castra [& namespaces]
   (let [seq* #(or (try (seq %) (catch Throwable e)) [%])
         vars (->> namespaces (map seq*) (mapcat #(apply select-vars %)) set)]
     (fn [request]

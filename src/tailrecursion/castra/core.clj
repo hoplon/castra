@@ -1,16 +1,16 @@
-(ns wigwam-clj.request
+(ns tailrecursion.castra.core
   (:refer-clojure :exclude [defn]))
 
 (def ^:dynamic *request* (atom nil))
 (def ^:dynamic *session* (atom nil))
 
 (defn- make-asserts [forms]
-  (when forms `[(assert (wigwam-clj.request/when-http ~forms))]))
+  (when forms `[(assert (tailrecursion.castra.core/when-http ~forms))]))
 
 (defmacro when-http [forms]
   `(try
-     (if @wigwam-clj.request/*request* (and ~@forms) true)
-     (finally (reset! wigwam-clj.request/*request* nil))))
+     (if @tailrecursion.castra.core/*request* (and ~@forms) true)
+     (finally (reset! tailrecursion.castra.core/*request* nil))))
 
 (defmacro defn [name & fdecl]
   (let [doc?  (string? (first fdecl))

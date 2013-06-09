@@ -1,8 +1,8 @@
-(ns wigwam-clj.foo
+(ns example.api.foo
   (:refer-clojure :exclude [defn])
   (:require
-    [wigwam-clj.rules   :as r :refer :all]
-    [wigwam-clj.request :as q :refer [defn]]))
+    [example.http.rules        :refer :all]
+    [tailrecursion.castra.core :refer [defn]]))
 
 (defn login [user pass]
   {:rpc [(login! user pass)]

@@ -1,4 +1,4 @@
-# wigwam-clj
+# Castra
 
 FIXME: description
 
@@ -10,7 +10,7 @@ Download from http://example.com/FIXME.
 
 FIXME: explanation
 
-    $ java -jar wigwam-clj-0.1.0-standalone.jar [args]
+    $ lein run
 
 ## Options
 

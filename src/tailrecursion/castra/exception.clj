@@ -1,4 +1,4 @@
-(ns wigwam-clj.exception
+(ns tailrecursion.castra.exception
   (:require
     [tailrecursion.extype :as ex :refer [defex extend-ex]]))
 

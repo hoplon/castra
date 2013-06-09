@@ -1,6 +1,6 @@
-(ns wigwam-clj.core-test
+(ns tailrecursion.castra.core-test
   (:use clojure.test
-        wigwam-clj.core))
+        tailrecursion.castra.core))
 
 (deftest a-test
   (testing "FIXME, I fail."

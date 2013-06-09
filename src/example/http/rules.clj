@@ -1,7 +1,7 @@
-(ns wigwam-clj.rules
+(ns example.http.rules
   (:require
-    [wigwam-clj.exception :as wx  :refer [ex auth]]
-    [wigwam-clj.request   :as rpc :refer [*request* *session*]]))
+    [tailrecursion.castra.exception :refer [ex auth]]
+    [tailrecursion.castra.core      :refer [*request* *session*]]))
 
 (def allow (constantly true))
 (def deny  #(throw (ex auth "You're not allowed to do that.")))
