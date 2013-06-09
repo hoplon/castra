@@ -41,7 +41,6 @@
         bad!  #(wrapx wx/not-found)
         err!  #(wrapx wx/error %)
         sym   (or (path->sym path) (bad!))]
-    (require (symbol (namespace sym)))
     (let [f (or (resolve sym) (bad!))]
       (or (contains? vars f) (bad!))
       (or (:rpc (meta f)) (reset! *request* nil)) 
