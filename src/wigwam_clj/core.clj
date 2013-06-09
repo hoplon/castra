@@ -37,14 +37,15 @@
 
 (defn do-rpc
   [vars path args]
-  (if-not (vector? args)
-    (throw (ex wx/fatal (ex wx/error "Arglist must be a vector."))))
-  (let [bad! #(throw (ex wx/fatal (ex wx/not-found)))
-        sym  (or (path->sym path) (bad!))]
+  (let [wrapx #(throw (ex wx/fatal (apply ex %&)))
+        bad!  #(wrapx wx/not-found)
+        err!  #(wrapx wx/error %)
+        sym   (or (path->sym path) (bad!))]
     (require (symbol (namespace sym)))
     (let [f (or (resolve sym) (bad!))]
       (or (contains? vars f) (bad!))
-      (if-not (:rpc (meta f)) (reset! *request* nil)) 
+      (or (:rpc (meta f)) (reset! *request* nil)) 
+      (or (vector? args) (err! "Arglist must be a vector."))
       (apply f args))))
 
 (defn select-vars
