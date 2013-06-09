@@ -1,31 +1,32 @@
 (ns wigwam-clj.foo
+  (:refer-clojure :exclude [defn])
   (:require
     [wigwam-clj.rules   :as r]
-    [wigwam-clj.request :as rpc]))
+    [wigwam-clj.request :as q :refer [defn]]))
 
-(rpc/defn login [user pass]
+(defn login [user pass]
   {:rpc [(r/login! user pass)]
    :pre [(not= user "omfg")]}
   "Congratulations, you're logged in.")
 
-(rpc/defn logout []
+(defn logout []
   {:rpc [(r/logout!)]}
   "Congratulations, you're logged out.")
 
-(rpc/defn test1 [x y]
+(defn test1 [x y]
   {:rpc [(r/logged-in?)]}
   (+ x y))
 
-(rpc/defn test2 [x y]
+(defn test2 [x y]
   {:rpc [(r/deny)]}
   (- x y))
 
-(rpc/defn test3
+(defn test3
   "Calls test2 without triggering 'deny' assertion."
   [x y]
   (test2 x y))
 
-(rpc/defn ^:private test4
+(defn ^:private test4
   "Not accessible via RPC (not public)."
   [x y]
   {:rpc [(r/allow)]}
