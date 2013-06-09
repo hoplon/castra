@@ -6,7 +6,8 @@
     [ring.middleware.session.cookie :as rk]
     [ring.middleware.file           :as rf]
     [ring.middleware.file-info      :as rg :refer [wrap-file-info]]
-    [wigwam-clj.core                :as wc :refer [wrap-json wrap-post]]))
+    [wigwam-clj.middleware          :as wm :refer [wrap-json wrap-post]]
+    [wigwam-clj.core                :as wc]))
 
 (def cookie-store   (rk/cookie-store {:key "a 16-byte secret"}))
 (def wrap-session   #(rs/wrap-session % {:store cookie-store}))
