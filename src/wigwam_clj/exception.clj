@@ -19,8 +19,8 @@
 
 (defex exception "Server error." {:status 500 :severity :error})
 
-(extend-ex csrf       exception {:status 403} "There was a problem. Are cookies disabled?")
-(extend-ex auth       exception {:status 403} "Please log in to continue.")
+(extend-ex csrf       exception {:status 403} "Invalid or missing CSRF token.")
+(extend-ex auth       exception {:status 403} "Authorization required.")
 (extend-ex not-found  exception {:status 404} "RPC endpoint not found.")
 (extend-ex ignore     exception {:severity :ignore})
 (extend-ex debug      exception {:severity :debug})
