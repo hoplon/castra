@@ -33,9 +33,7 @@
         vars (->> namespaces (map seq*) (mapcat #(apply select-vars %)) set)]
     (fn [request]
       (binding [*request* (atom request), *session* (atom (:session request))]
-        (let [doit #(do-rpc vars (:uri request) (:body request))
-              resp (try (doit) (catch Throwable e e))
-              xclj (when (instance? Throwable resp) (ex->clj resp))]
-          {:status  (or (:status xclj) 200)
-           :body    (or xclj resp)
-           :session @*session*})))))
+        (let [d #(do-rpc vars (:uri request) (:body request))
+              r (try (d) (catch Throwable e e))
+              x (when (instance? Throwable r) (ex->clj r))]
+          {:status (or (:status x) 200), :body (or x r), :session @*session*})))))
