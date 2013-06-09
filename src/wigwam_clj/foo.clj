@@ -3,16 +3,12 @@
     [wigwam-clj.rules   :as r]
     [wigwam-clj.request :as rpc]))
 
-(rpc/defn login
-  "This is a doc comment."
-  [user pass]
+(rpc/defn login [user pass]
   {:rpc [(r/login! user pass)]
    :pre [(not= user "omfg")]}
   "Congratulations, you're logged in.")
 
-(rpc/defn ^:rpc-test1 logout
-  "Hello world."
-  []
+(rpc/defn logout []
   {:rpc [(r/logout!)]}
   "Congratulations, you're logged out.")
 
