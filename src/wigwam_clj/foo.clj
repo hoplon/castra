@@ -18,7 +18,6 @@
   (swap! *session* assoc :login nil))
 
 (defn logged-in? []
-  (pp/pprint @*session*)
   (or (get @*session* :login) (throw (ex wx/auth))))
 
 ;; API methods ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

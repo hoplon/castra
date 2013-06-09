@@ -14,14 +14,11 @@
 
 (defn do-rpc
   [vars path args]
-  (let [wrapx #(throw (ex wx/fatal (apply ex %&)))
-        bad!  #(wrapx wx/not-found)
-        err!  #(wrapx wx/error %)
+  (let [bad!  #(throw (ex wx/fatal (apply ex wx/not-found)))
         sym   (or (path->sym path) (bad!))]
     (let [f (or (resolve sym) (bad!))]
       (or (contains? vars f) (bad!))
       (or (:rpc (meta f)) (reset! *request* nil)) 
-      (or (vector? args) (err! "Arglist must be a vector."))
       (apply f args))))
 
 (defn select-vars

@@ -10,9 +10,7 @@
   [forms]
   `(try
      (if @wigwam-clj.request/*request* (and ~@forms) true)
-     (finally
-       (prn ["session" @wigwam-clj.request/*request*])
-       (reset! wigwam-clj.request/*request* nil))))
+     (finally (reset! wigwam-clj.request/*request* nil))))
 
 (core/defn make-asserts [forms]
   (when forms `[(assert (wigwam-clj.request/when-http ~forms))]))
