@@ -3,15 +3,13 @@
     [clojure.data.json    :as json]
     [wigwam-clj.exception :as wx :refer [ex ex->clj]]))
 
-(defn wrap-post
-  [handler]
+(defn wrap-post [handler]
   (fn [request]
     (if (= :post (:request-method request))
       (handler request)
       {:status 404, :headers {}, :body "404 Not Found"})))
 
-(defn wrap-json
-  [handler]
+(defn wrap-json [handler]
   (fn [request]
     (let [ct {"Content-Type" "application/json"}]
       (try

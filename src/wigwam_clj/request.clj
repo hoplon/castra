@@ -7,8 +7,7 @@
 (defn- make-asserts [forms]
   (when forms `[(assert (wigwam-clj.request/when-http ~forms))]))
 
-(defmacro when-http
-  [forms]
+(defmacro when-http [forms]
   `(try
      (if @wigwam-clj.request/*request* (and ~@forms) true)
      (finally (reset! wigwam-clj.request/*request* nil))))

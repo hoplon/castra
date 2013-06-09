@@ -6,13 +6,11 @@
     [wigwam-clj.exception :as wx :refer [ex ex->clj]]
     [wigwam-clj.request   :as wr :refer [*request* *session*]]))
 
-(defn path->sym
-  [path]
+(defn path->sym [path]
   (when-let [path (second (re-find #"^(?:/[^/]+)*/([^/]+/[^/]+)$" path))] 
     (-> path rc/url-decode symbol)))
 
-(defn do-rpc
-  [vars path args]
+(defn do-rpc [vars path args]
   (let [bad! #(throw (ex wx/fatal (apply ex wx/not-found)))
         sym  (or (path->sym path) (bad!))]
     (let [f (or (resolve sym) (bad!))]
@@ -20,8 +18,7 @@
       (or (:rpc (meta f)) (reset! *request* nil)) 
       (apply f args))))
 
-(defn select-vars
-  [nsname & {:keys [only exclude]}]
+(defn select-vars [nsname & {:keys [only exclude]}]
   (let [var-fn?   #(fn? (var-get %))
         to-var    #(resolve (symbol (str nsname) (str %)))
         to-vars   #(->> % (map to-var) (keep identity) set)
@@ -31,8 +28,7 @@
         exclude   (if (seq exclude) (to-vars exclude) #{})]
     (-> vars (intersection only) (difference exclude))))
 
-(defn wigwam
-  [& namespaces]
+(defn wigwam [& namespaces]
   (let [seq* #(or (try (seq %) (catch Throwable e)) [%])
         vars (->> namespaces (map seq*) (mapcat #(apply select-vars %)) set)]
     (fn [request]
