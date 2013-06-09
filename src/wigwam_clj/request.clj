@@ -1,19 +1,17 @@
 (ns wigwam-clj.request
   (:refer-clojure :exclude [defn]))
 
-(alias 'core 'clojure.core)
-
 (def ^:dynamic *request* (atom nil))
 (def ^:dynamic *session* (atom nil))
+
+(defn- make-asserts [forms]
+  (when forms `[(assert (wigwam-clj.request/when-http ~forms))]))
 
 (defmacro when-http
   [forms]
   `(try
      (if @wigwam-clj.request/*request* (and ~@forms) true)
      (finally (reset! wigwam-clj.request/*request* nil))))
-
-(core/defn make-asserts [forms]
-  (when forms `[(assert (wigwam-clj.request/when-http ~forms))]))
 
 (defmacro defn [name & fdecl]
   (let [doc?  (string? (first fdecl))
