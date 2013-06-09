@@ -1,8 +1,7 @@
 (ns wigwam-clj.middleware
   (:require
     [clojure.data.json    :as json]
-    [wigwam-clj.exception :as wx]
-    [tailrecursion.extype :as ex :refer [ex ex->clj]]))
+    [wigwam-clj.exception :as wx :refer [ex ex->clj]]))
 
 (defn wrap-post
   [handler]
@@ -22,6 +21,6 @@
             (assoc :body (json/write-str (:body resp)))
             (update-in [:headers] merge ct)))
         (catch Throwable e
-          (let [body (json/write-str (ex->clj e wx/fatal))]
+          (let [body (json/write-str (ex->clj e))]
             {:status 500, :headers ct, :body body}))))))
 

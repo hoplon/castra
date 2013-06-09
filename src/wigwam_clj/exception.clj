@@ -14,6 +14,9 @@
 (def error      ::error)
 (def fatal      ::fatal)
 
+(def ex         ex/ex)
+(def ex->clj    #(ex/ex->clj % fatal))
+
 (defex exception "Server error." {:status 500 :severity :error})
 
 (extend-ex csrf       exception {:status 403} "There was a problem. Are cookies disabled?")

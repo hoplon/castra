@@ -1,8 +1,7 @@
 (ns wigwam-clj.foo
   (:require
     [clojure.pprint       :as pp]
-    [wigwam-clj.exception :as wx]
-    [tailrecursion.extype :as ex  :refer [ex]]
+    [wigwam-clj.exception :as wx  :refer [ex]]
     [wigwam-clj.request   :as rpc :refer [*request* *session*]]))
 
 ;; rules ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

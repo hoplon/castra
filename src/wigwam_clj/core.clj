@@ -4,9 +4,8 @@
     [clojure.string       :as string]
     [clojure.set          :as cs :refer [intersection difference]]
     [ring.util.codec      :as rc]
-    [wigwam-clj.exception :as wx]
-    [wigwam-clj.request   :as wr :refer [*request* *session*]]
-    [tailrecursion.extype :as ex :refer [ex ex->clj]]))
+    [wigwam-clj.exception :as wx :refer [ex ex->clj]]
+    [wigwam-clj.request   :as wr :refer [*request* *session*]]))
 
 (defn path->sym
   [path]
@@ -46,7 +45,7 @@
         (let [resp (try
                      (do-rpc vars (:uri request) (:body request))
                      (catch Throwable e e))
-              xclj (when (instance? Throwable resp) (ex->clj resp wx/fatal))]
+              xclj (when (instance? Throwable resp) (ex->clj resp))]
           {:status  (or (:status xclj) 200)
            :body    (or xclj resp)
            :session @*session*})))))
