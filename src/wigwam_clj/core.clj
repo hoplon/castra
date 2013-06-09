@@ -36,8 +36,7 @@
   (let [seq* #(or (try (seq %) (catch Throwable e)) [%])
         vars (->> namespaces (map seq*) (mapcat #(apply select-vars %)) set)]
     (fn [request]
-      (binding [*request* (atom request)
-                *session* (atom (:session request))]
+      (binding [*request* (atom request), *session* (atom (:session request))]
         (let [doit #(do-rpc vars (:uri request) (:body request))
               resp (try (doit) (catch Throwable e e))
               xclj (when (instance? Throwable resp) (ex->clj resp))]
