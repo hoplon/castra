@@ -19,17 +19,21 @@
   (fn [request]
     (if (= :post (:request-method request))
       (handler request)
-      {:status 404 :headers {} :body ""})))
+      {:status 404, :headers {}, :body "404 Not Found"})))
 
 (defn wrap-json
   [handler]
   (fn [request]
-    (let [body (:body request)
-          data (json/read-str (if (string? body) body (slurp body)))
-          resp (handler (assoc request :body data))]
-      (-> resp
-        (assoc :body (json/write-str (:body resp)))
-        (assoc-in [:headers "Content-Type"] "application/json")))))
+    (let [ct {"Content-Type" "application/json"}]
+      (try
+        (let [data (json/read-str (slurp (:body request)))
+              resp (handler (assoc request :body data))]
+          (-> resp
+            (assoc :body (json/write-str (:body resp)))
+            (update-in [:headers] merge ct)))
+        (catch Throwable e
+          (let [body (json/write-str (ex->clj e wx/fatal))]
+            {:status 500, :headers ct, :body body}))))))
 
 (defn do-rpc
   [vars path args]
