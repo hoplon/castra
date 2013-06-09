@@ -22,7 +22,7 @@
         pre?  (and (< 1 (count forms)) (map? (first forms))) 
         rpc   (when pre? (make-asserts (:rpc (first forms))))
         head  (->> [(if pre? (dissoc (first forms) :rpc) (first forms))]
-                (remove #(or (nil? %) (empty? %)))) 
+                (remove #(or (nil? %) (and pre? (empty? %))))) 
         tail  (rest forms)
         name  (if rpc (with-meta name (assoc (meta name) :rpc true)) name)]
     `(clojure.core/defn ~name ~@doc ~args ~@head ~@rpc ~@tail)))
