@@ -38,9 +38,8 @@
     (fn [request]
       (binding [*request* (atom request)
                 *session* (atom (:session request))]
-        (let [resp (try
-                     (do-rpc vars (:uri request) (:body request))
-                     (catch Throwable e e))
+        (let [doit #(do-rpc vars (:uri request) (:body request))
+              resp (try (doit) (catch Throwable e e))
               xclj (when (instance? Throwable resp) (ex->clj resp))]
           {:status  (or (:status xclj) 200)
            :body    (or xclj resp)
