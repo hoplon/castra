@@ -1,5 +1,4 @@
 (ns wigwam-clj.core
-  (:gen-class)
   (:require
     [ring.util.codec      :as rc]
     [clojure.string       :as string]
