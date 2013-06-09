@@ -6,10 +6,6 @@
     [tailrecursion.castra.exception :as x :refer [ex ex->clj]]
     [tailrecursion.castra.core      :as r :refer [*request* *session*]]))
 
-(defn path->sym [path]
-  (when-let [path (second (re-find #"^(?:/[^/]+)*/([^/]+/[^/]+)$" path))] 
-    (-> path url-decode symbol)))
-
 (defn csrf! []
   (let [tok1 (get-in @*request* [:headers "x-csrf"])
         tok2 (:x-csrf @*session*)
@@ -18,10 +14,9 @@
       (swap! *session* assoc :x-csrf (tok!))
       (throw (ex x/csrf)))))
 
-(defn do-rpc [vars path args]
+(defn do-rpc [vars [f & args]]
   (let [bad! #(throw (ex x/fatal (ex x/not-found)))
-        sym  (or (path->sym path) (bad!))
-        fun  (or (resolve sym) (bad!))]
+        fun  (or (resolve (symbol f)) (bad!))]
     (when-not (contains? vars fun) (bad!))
     (when-not (:rpc (meta fun)) (reset! *request* nil)) 
     (apply fun args)))
@@ -41,7 +36,7 @@
         vars (->> namespaces (map seq*) (mapcat #(apply select-vars %)) set)]
     (fn [request]
       (binding [*request* (atom request), *session* (atom (:session request))]
-        (let [d #(do (csrf!) (do-rpc vars (:uri request) (:body request))) 
+        (let [d #(do (csrf!) (do-rpc vars (:body request))) 
               r (try (d) (catch Throwable e e))
               x (when (instance? Throwable r) (ex->clj r))
               h {"X-Csrf" (:x-csrf @*session*)}]
