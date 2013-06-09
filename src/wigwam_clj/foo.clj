@@ -12,9 +12,7 @@
   {:rpc [(r/logout!)]}
   "Congratulations, you're logged out.")
 
-(rpc/defn test1
-  "The rain in spain falls mainly on the plain."
-  [x y]
+(rpc/defn test1 [x y]
   {:rpc [(r/logged-in?)]}
   (+ x y))
 
