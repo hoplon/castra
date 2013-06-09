@@ -11,7 +11,7 @@
     (-> path rc/url-decode symbol)))
 
 (defn do-rpc [vars path args]
-  (let [bad! #(throw (ex wx/fatal (apply ex wx/not-found)))
+  (let [bad! #(throw (ex wx/fatal (ex wx/not-found)))
         sym  (or (path->sym path) (bad!))
         fun  (or (resolve sym) (bad!))]
     (when-not (contains? vars fun) (bad!))
