@@ -22,10 +22,20 @@
   {:rpc [(r/logged-in?)]}
   (+ x y))
 
-(rpc/defn test2 [x y]
+(rpc/defn test2
+  "Denies all RPC access."
+  [x y]
   {:rpc [(r/deny)]}
   (- x y))
 
-(rpc/defn test3 [x y]
+(rpc/defn test3
+  "Calls test2 without triggering 'deny' assertion."
+  [x y]
   {:rpc [(r/allow)]}
   (test2 x y))
+
+(rpc/defn ^:private test4
+  "Not accessible via RPC (not public)."
+  [x y]
+  {:rpc [(r/allow)]}
+  (* x y))
