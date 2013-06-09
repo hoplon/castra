@@ -9,6 +9,14 @@
       (handler request)
       {:status 404, :headers {}, :body "404 Not Found"})))
 
+(defn wrap-stacktrace [handler]
+  (fn [request]
+    (let [resp (handler request)]
+      (when (not= 200 (:status resp))
+        (print (:trace (:body resp)))
+        (flush))
+      (update-in resp [:body] dissoc :trace))))
+
 (defn wrap-json [handler]
   (fn [request]
     (let [ct {"Content-Type" "application/json"}]
