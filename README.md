@@ -4,7 +4,7 @@ FIXME: description
 
 ## Installation
 
-Download from http://example.com/FIXME.
+Artifacts are published on [Clojars](http://clojars.org/tailrecursion/castra).
 
 ## Usage
 
