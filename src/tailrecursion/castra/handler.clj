@@ -1,10 +1,10 @@
 (ns tailrecursion.castra.handler
   (:require
-    [ring.middleware.session.cookie :as c]
-    [ring.util.codec                :as u :refer [url-decode base64-encode]]
-    [clojure.set                    :as s :refer [intersection difference]]
-    [tailrecursion.castra.exception :as x :refer [ex ex->clj]]
-    [tailrecursion.castra.core      :as r :refer [*request* *session*]]))
+    [ring.middleware.session.cookie   :as c]
+    [ring.util.codec                  :as u :refer [url-decode base64-encode]]
+    [clojure.set                      :as s :refer [intersection difference]]
+    [tailrecursion.castra.exception   :as x :refer [ex ex->clj]]
+    [tailrecursion.castra.core        :as r :refer [*request* *session*]]))
 
 (defn csrf! []
   (let [tok1 (get-in @*request* [:headers "x-csrf"])
@@ -35,11 +35,9 @@
   (let [seq* #(or (try (seq %) (catch Throwable e)) [%])
         vars (->> namespaces (map seq*) (mapcat #(apply select-vars %)) set)]
     (fn [request]
-      (if (not= :post (:request-method request))
-        {:status 404, :headers {}, :body "404 Not Found"}
-        (binding [*request* (atom request), *session* (atom (:session request))]
-          (let [d #(do (csrf!) (do-rpc vars (:body request))) 
-                r (try (d) (catch Throwable e e))
-                x (when (instance? Throwable r) (ex->clj r))
-                h {"X-Csrf" (:x-csrf @*session*)}]
-            {:status (:status x 200), :headers h, :body (or x r), :session @*session*}))))))
+      (binding [*request* (atom request), *session* (atom (:session request))]
+        (let [d #(do (csrf!) (do-rpc vars (:body request))) 
+              r (try (d) (catch Throwable e e))
+              x (when (instance? Throwable r) (ex->clj r))
+              h {"X-Csrf" (:x-csrf @*session*)}]
+          {:status (:status x 200), :headers h, :body (or x r), :session @*session*})))))
