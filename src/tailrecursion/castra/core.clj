@@ -5,12 +5,9 @@
 (def ^:dynamic *session* (atom nil))
 
 (defn- make-asserts [forms]
-  (when forms `[(assert (tailrecursion.castra.core/when-http ~forms))]))
-
-(defmacro when-http [forms]
-  `(try
-     (if @tailrecursion.castra.core/*request* (and ~@forms) true)
-     (finally (reset! tailrecursion.castra.core/*request* nil))))
+  (let [*req* 'tailrecursion.castra.core/*request*]
+    `[(assert (try (if @~*req* (and ~@forms) true)
+                (finally (reset! ~*req* (atom nil)))))]))
 
 (defmacro defn [name & fdecl]
   (let [doc?  (string? (first fdecl))
