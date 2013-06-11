@@ -41,7 +41,7 @@
       (if-not (= :post (:request-method request))
         {:status 404 :headers {} :body ""}
         (binding [*request* (atom request), *session* (atom (:session request))]
-          (let [f #(do (csrf!) (do-rpc vars (read-string %)))
+          (let [f #(do (csrf!) (do-rpc vars (read-string (slurp %))))
                 b (try (f (:body request)) (catch Throwable e (tagx e)))
                 s (::status (meta b) 200)
                 h (assoc head "X-Csrf" (:x-csrf @*session*))]
