@@ -1,12 +1,11 @@
 (ns tailrecursion.castra.handler
   (:refer-clojure :exclude [read-string])
   (:require
-    [ring.middleware.session.cookie   :as c]
-    [ring.util.codec                  :as u :refer [url-decode base64-encode]]
-    [clojure.set                      :as s :refer [intersection difference]]
-    [clojure.tools.reader.edn         :as e :refer [read-string]]
-    [tailrecursion.castra.exception   :as x :refer [ex ex->clj]]
-    [tailrecursion.castra.core        :as r :refer [*request* *session*]]))
+    [ring.middleware.session.cookie :as c]
+    [ring.util.codec                :as u :refer [url-decode base64-encode]]
+    [clojure.set                    :as s :refer [intersection difference]]
+    [clojure.tools.reader.edn       :as e :refer [read-string]]
+    [tailrecursion.castra           :as r :refer [ex ex->clj *request* *session*]]))
 
 (defn csrf! []
   (let [tok1 (get-in @*request* [:headers "x-csrf"])
