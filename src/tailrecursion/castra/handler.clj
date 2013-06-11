@@ -1,4 +1,5 @@
 (ns tailrecursion.castra.handler
+  (:refer-clojure :exclude [read-string])
   (:require
     [ring.middleware.session.cookie   :as c]
     [ring.util.codec                  :as u :refer [url-decode base64-encode]]
