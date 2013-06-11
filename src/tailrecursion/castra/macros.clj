@@ -13,6 +13,16 @@
 
 (comment
 
+  (def foo 100)
+  (def bar "omfg")
+
+  (try-async state
+    (swap! loading conj true)
+    (server.ns/doit foo bar)
+    (catch server.ns/auth e error
+      (:message e))
+    (finally (swap! loading peek)))
+
 (defmacro try-async [& clauses]
   (let [exprs (remove #(contains? #{'catch 'finally} (first %)) clauses)
         ctchs (filter #(= 'catch (first %)) clauses)
