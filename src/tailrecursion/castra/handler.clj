@@ -13,10 +13,10 @@
         tok! #(base64-encode (#'c/secure-random-bytes 16))]
     (when-not (and tok1 (= tok1 tok2))
       (swap! *session* assoc :x-csrf (tok!))
-      (throw (ex x/csrf)))))
+      (throw (ex r/csrf)))))
 
 (defn do-rpc [vars [f & args]]
-  (let [bad! #(throw (ex x/fatal (ex x/not-found)))
+  (let [bad! #(throw (ex r/fatal (ex r/not-found)))
         fun  (or (resolve (symbol f)) (bad!))]
     (when-not (contains? vars fun) (bad!))
     (when-not (:rpc (meta fun)) (reset! *request* nil)) 
