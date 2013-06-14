@@ -1,10 +1,10 @@
 (ns tailrecursion.castra.handler
-  (:refer-clojure :exclude [read-string])
   (:require
     [ring.middleware.session.cookie :as c]
+    [ring.util.response             :as p :refer [charset]]
     [ring.util.codec                :as u :refer [url-decode base64-encode]]
     [clojure.set                    :as s :refer [intersection difference]]
-    [clojure.tools.reader.edn       :as e :refer [read-string]]
+    [tailrecursion.cljson           :as e :refer [cljson->clj clj->cljson]]
     [tailrecursion.castra           :as r :refer [ex ex->clj *request* *session*]]))
 
 (defn csrf! []
@@ -32,7 +32,7 @@
     (-> vars (intersection only) (difference exclude))))
 
 (defn castra [& namespaces]
-  (let [head {"Content-type" "application/edn"}
+  (let [head {"Content-type" "application/json"}
         seq* #(or (try (seq %) (catch Throwable e)) [%])
         tagx #(let [x (ex->clj %)] (with-meta x {::status (:status x)}))
         vars (->> namespaces (map seq*) (mapcat #(apply select-vars %)) set)]
@@ -40,8 +40,10 @@
       (if-not (= :post (:request-method request))
         {:status 404 :headers {} :body ""}
         (binding [*request* (atom request), *session* (atom (:session request))]
-          (let [f #(do (csrf!) (do-rpc vars (read-string (slurp %))))
+          (let [f #(do (csrf!) (do-rpc vars (cljson->clj (slurp %))))
                 b (try (f (:body request)) (catch Throwable e (tagx e)))
                 s (::status (meta b) 200)
                 h (assoc head "X-Csrf" (:x-csrf @*session*))]
-            {:status s, :headers h, :body (pr-str b), :session @*session*}))))))
+            (->
+              {:status s, :headers h, :body (clj->cljson b), :session @*session*}
+              (charset "UTF-8"))))))))
