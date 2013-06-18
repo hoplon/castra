@@ -26,6 +26,7 @@
   (let [t (.-responseText xhr)
         c (.getResponseHeader xhr "X-Csrf")]
     (if c (reset! csrf c))
+    (.log js/console "got here")
     (try (cljson->clj t) (catch js/Error e (jsex->ex e)))))
 
 (defn ajax [async? expr out err fin fails]

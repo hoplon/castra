@@ -34,16 +34,15 @@
 (defn castra [& namespaces]
   (let [head {"Content-type" "application/json"}
         seq* #(or (try (seq %) (catch Throwable e)) [%])
-        tagx #(let [x (ex->clj %)] (with-meta x {::status (:status x)}))
         vars (->> namespaces (map seq*) (mapcat #(apply select-vars %)) set)]
     (fn [request]
       (if-not (= :post (:request-method request))
         {:status 404 :headers {} :body ""}
         (binding [*request* (atom request), *session* (atom (:session request))]
           (let [f #(do (csrf!) (do-rpc vars (cljson->clj (slurp %))))
-                b (try (f (:body request)) (catch Throwable e (tagx e)))
-                s (::status (meta b) 200)
+                d (try (clj->cljson (f (:body request))) (catch Throwable e e))
+                x (if (instance? Throwable d) (ex->clj d))
+                s (:status x 200)
+                b (if x (clj->cljson x) d)
                 h (assoc head "X-Csrf" (:x-csrf @*session*))]
-            (->
-              {:status s, :headers h, :body (clj->cljson b), :session @*session*}
-              (charset "UTF-8"))))))))
+            {:status s, :headers h, :body b, :session @*session*}))))))
