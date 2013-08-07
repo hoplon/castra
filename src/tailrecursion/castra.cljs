@@ -55,3 +55,16 @@
 
 (def async (partial remote true))
 (def sync  (partial remote false))
+
+(defn safe-pop [x] (or (try (pop x) (catch js/Error e)) x))
+
+(defn mkremote [endpoint state error loading]
+  (fn [& args]
+    (swap! loading conj ::xhr)
+    (async
+      `[~endpoint ~@args]
+      (fn [x]
+        (reset! error nil)
+        (reset! state x))
+      (fn [x] (reset! error x))
+      (fn [_ _] (swap! loading safe-pop)))))
