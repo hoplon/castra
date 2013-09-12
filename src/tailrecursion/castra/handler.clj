@@ -37,7 +37,7 @@
         vars (->> namespaces (map seq*) (mapcat #(apply select-vars %)) set)]
     (fn [request]
       (if-not (= :post (:request-method request))
-        {:status 404 :headers {} :body ""}
+        {:status 404 :headers {} :body "404 - Not Found"}
         (binding [*request* (atom request), *session* (atom (:session request))]
           (let [f #(do (csrf!) (do-rpc vars (cljson->clj (slurp %))))
                 d (try (clj->cljson (f (:body request))) (catch Throwable e e))
