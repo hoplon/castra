@@ -37,7 +37,7 @@
 (defn- make-asserts [forms]
   (let [*req* 'tailrecursion.castra/*request*]
     `[(assert (try (if @~*req* (and ~@forms) true)
-                (finally (reset! ~*req* (atom nil)))))]))
+                (finally (reset! ~*req* nil))))]))
 
 (defmacro defn [name & fdecl]
   (let [doc?  (string? (first fdecl))

@@ -16,10 +16,10 @@
       (throw (ex r/csrf)))))
 
 (defn do-rpc [vars [f & args]]
-  (let [bad! #(throw (ex r/fatal (ex r/not-found)))
-        fun  (or (resolve (symbol f)) (bad!))]
+  (let [bad!  #(throw (ex r/fatal (ex r/not-found)))
+        fun   (or (resolve (symbol f)) (bad!))]
     (when-not (contains? vars fun) (bad!))
-    (when-not (:rpc (meta fun)) (reset! *request* nil)) 
+    (when-not (:rpc (meta fun)) (bad!))
     (apply fun args)))
 
 (defn select-vars [nsname & {:keys [only exclude]}]
