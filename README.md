@@ -4,7 +4,7 @@
 
 Web application RPC library for Clojure and Ring.
 
-*This is experimantal software. It works, but it may change.*
+*This library is usable but under construction and subject to frequent change.*
 
 ## Installation
 
