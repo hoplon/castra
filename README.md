@@ -1,4 +1,4 @@
-<img src="https://raw.github.com/tailrecursion/castra/master/img/Masada.svg">
+<img src="https://raw.github.com/tailrecursion/castra/master/img/Masada.png">
 
 # Castra
 
