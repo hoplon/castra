@@ -1,3 +1,5 @@
+<img src="https://raw.github.com/tailrecursion/castra/master/img/Masada.svg">
+
 # Castra
 
 FIXME: description
