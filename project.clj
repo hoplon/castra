@@ -1,10 +1,11 @@
-(defproject tailrecursion/castra "0.1.0-SNAPSHOT"
+(defproject tailrecursion/castra "0.1.0"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure       "1.5.1"]
+                 [cheshire                  "5.2.0"]
                  [ring/ring-core            "1.1.8"]
                  [ring/ring-jetty-adapter   "1.1.8"]
-                 [tailrecursion/cljson      "0.1.0-SNAPSHOT"]
-                 [tailrecursion/extype      "0.1.0-SNAPSHOT"]])
+                 [tailrecursion/cljson      "1.0.5"]
+                 [tailrecursion/extype      "0.1.0"]])

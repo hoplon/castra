@@ -5,7 +5,8 @@
     [ring.util.codec                :as u :refer [url-decode base64-encode]]
     [clojure.set                    :as s :refer [intersection difference]]
     [tailrecursion.cljson           :as e :refer [cljson->clj clj->cljson]]
-    [tailrecursion.castra           :as r :refer [ex ex->clj *request* *session*]]))
+    [tailrecursion.castra           :as r :refer [ex ex->clj *request* *session*]]
+    [cheshire.core                  :as j :refer [generate-string parse-string]]))
 
 (defn csrf! []
   (let [tok1 (get-in @*request* [:headers "x-csrf"])
@@ -31,16 +32,24 @@
         exclude   (if (seq exclude) (to-vars exclude) #{})]
     (-> vars (intersection only) (difference exclude))))
 
+(defmulti decode-tunnel #(get-in % [:headers "x-tunnel"]))
+(defmethod decode-tunnel "cljson" [req] (cljson->clj (slurp (:body req))))
+(defmethod decode-tunnel :default [req] (parse-string (slurp (:body req))))
+
+(defmulti encode-tunnel (fn [req x] (get-in req [:headers "x-tunnel"])))
+(defmethod encode-tunnel "cljson" [req x] (clj->cljson x))
+(defmethod encode-tunnel :default [req x] (generate-string x))
+
 (defn castra [& namespaces]
   (let [head {"Content-type" "application/json"}
         seq* #(or (try (seq %) (catch Throwable e)) [%])
         vars (->> namespaces (map seq*) (mapcat #(apply select-vars %)) set)]
-    (fn [request]
-      (if-not (= :post (:request-method request))
+    (fn [req]
+      (if-not (= :post (:request-method req))
         {:status 404 :headers {} :body "404 - Not Found"}
-        (binding [*request* (atom request), *session* (atom (:session request))]
-          (let [f #(do (csrf!) (do-rpc vars (cljson->clj (slurp %))))
-                d (try (clj->cljson (f (:body request))) (catch Throwable e e))
+        (binding [*request* (atom req), *session* (atom (:session req))]
+          (let [f #(do (csrf!) (do-rpc vars (decode-tunnel %)))
+                d (try (encode-tunnel req (f req)) (catch Throwable e e))
                 x (if (instance? Throwable d) (ex->clj d))
                 s (:status x 200)
                 b (if x (clj->cljson x) d)

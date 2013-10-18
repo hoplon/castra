@@ -41,8 +41,9 @@
                    "data"         expr
                    "dataType"     "text"
                    "error"        wrap-err 
-                   "headers"      {"X-Csrf" @csrf
-                                   "Accept" "application/json"}
+                   "headers"      {"X-Csrf"   @csrf
+                                   "X-Tunnel" "cljson"
+                                   "Accept"   "application/json"}
                    "processData"  false
                    "success"      wrap-out
                    "type"         "POST"

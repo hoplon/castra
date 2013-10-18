@@ -11,14 +11,14 @@ Web application RPC library for Clojure and Ring.
 Artifacts are published on [Clojars][1].
 
 ```clojure
-[tailrecursion/castra "0.1.0-SNAPSHOT"]
+[tailrecursion/castra "0.1.0"]
 ```
 
 ```xml
 <dependency>
   <groupId>tailrecursion</groupId>
   <artifactId>castra</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1.0</version>
 </dependency>
 ```
 
