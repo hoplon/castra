@@ -1,4 +1,4 @@
-(defproject tailrecursion/castra "0.1.0"
+(defproject tailrecursion/castra "0.1.1"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -7,5 +7,5 @@
                  [cheshire                  "5.2.0"]
                  [ring/ring-core            "1.1.8"]
                  [ring/ring-jetty-adapter   "1.1.8"]
-                 [tailrecursion/cljson      "1.0.5"]
+                 [tailrecursion/cljson      "1.0.6"]
                  [tailrecursion/extype      "0.1.0"]])
