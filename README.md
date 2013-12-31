@@ -4,23 +4,11 @@
 
 Web application RPC library for Clojure and Ring.
 
-*This library is usable but under construction and subject to frequent change.*
-
 ## Installation
 
 Artifacts are published on [Clojars][1].
 
-```clojure
-[tailrecursion/castra "0.1.0"]
-```
-
-```xml
-<dependency>
-  <groupId>tailrecursion</groupId>
-  <artifactId>castra</artifactId>
-  <version>0.1.0</version>
-</dependency>
-```
+![latest version][3]
 
 ## Usage
 
@@ -38,3 +26,4 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 [1]: http://clojars.org/tailrecursion/castra
 [2]: https://github.com/tailrecursion/hoplon-demos
+[3]: http://clojars.org/tailrecursion/castra/latest-version.svg
