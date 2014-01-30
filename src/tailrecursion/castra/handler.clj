@@ -9,7 +9,6 @@
 (ns tailrecursion.castra.handler
   (:require
     [ring.middleware.session.cookie :as c]
-    [ring.util.response             :as p :refer [charset]]
     [ring.util.codec                :as u :refer [url-decode base64-encode]]
     [clojure.set                    :as s :refer [intersection difference]]
     [tailrecursion.cljson           :as e :refer [cljson->clj clj->cljson]]
@@ -28,7 +27,6 @@
   (let [bad!  #(throw (ex r/fatal (ex r/not-found)))
         fun   (or (resolve (symbol f)) (bad!))]
     (when-not (contains? vars fun) (bad!))
-    (when-not (:rpc (meta fun)) (bad!))
     (apply fun args)))
 
 (defn select-vars [nsname & {:keys [only exclude]}]

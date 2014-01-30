@@ -11,7 +11,7 @@
   (:require
     [tailrecursion.cljson :refer [cljson->clj clj->cljson]]))
 
-(def ^:dynamic *url* "")
+(def ^:dynamic *url* nil)
 (def csrf (atom ""))
 
 (defrecord CastraEx [type isa message data cause trace status severity])
@@ -33,7 +33,7 @@
 (defn xhr! [xhr]
   (let [t (.-responseText xhr)
         c (.getResponseHeader xhr "X-Csrf")]
-    (if c (reset! csrf c))
+    (when c (reset! csrf c))
     (try (cljson->clj t) (catch js/Error e (jsex->ex e)))))
 
 (defn ajax [async? expr out err fin fails]
@@ -68,12 +68,14 @@
 (defn safe-pop [x] (or (try (pop x) (catch js/Error e)) x))
 
 (defn mkremote [endpoint state error loading]
-  (fn [& args]
-    (swap! loading conj ::xhr)
-    (async
-      `[~endpoint ~@args]
-      (fn [x]
-        (reset! error nil)
-        (reset! state x))
-      (fn [x] (reset! error x))
-      (fn [_ _] (swap! loading safe-pop)))))
+  (let [url (or *url* (.. js/window -location -href))]
+    (fn [& args]
+      (swap! loading conj ::xhr)
+      (binding [*url* url]
+        (async
+          `[~endpoint ~@args]
+          (fn [x]
+            (reset! error nil)
+            (reset! state x))
+          (fn [x] (reset! error x))
+          (fn [_ _] (swap! loading safe-pop)))))))

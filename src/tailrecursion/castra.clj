@@ -9,7 +9,8 @@
 (ns tailrecursion.castra
   (:refer-clojure :exclude [defn])
   (:require
-    [tailrecursion.extype :as ex :refer [defex extend-ex]]))
+   [clojure.set :as set]
+   [tailrecursion.extype :as ex :refer [defex extend-ex]]))
 
 (def ^:dynamic *request* (atom nil))
 (def ^:dynamic *session* (atom nil))
@@ -42,18 +43,29 @@
 (extend-ex error      exception {:severity :error})
 (extend-ex fatal      exception {:severity :fatal})
 
-(defn- make-asserts [forms]
-  (let [*req* 'tailrecursion.castra/*request*]
-    `[(assert (try (if @~*req* (and ~@forms) true)
-                (finally (reset! ~*req* nil))))]))
+(defn- make-arity [[bind & [m & body :as forms]]]
+  (cond
+    (not (and (< 1 (count forms)) (map? m)))
+    `(~bind (reset! *request* nil) ~@forms)
+    (not (or (:rpc/pre m) (:rpc/query m)))
+    `(~bind ~m (reset! *request* nil) ~@body)
+    :else
+    (let [{pre :rpc/pre query :rpc/query} m
+          req (gensym)
+          m'  (not-empty (dissoc m :rpc/pre :rpc/query))]
+      `(~bind
+         ~@(when m' [m'])
+         (let [~req @*request*]
+           (reset! *request* nil)
+           ~@(when pre `[(assert (if ~req (and ~@pre) true))])
+           ~(if-not query
+              `(do ~@body)
+              `(let [ret# (do ~@body)]
+                 (if-not ~req
+                   ret#
+                   (do ~@query)))))))))
 
 (defmacro defn [name & fdecl]
-  (let [doc?  (string? (first fdecl))
-        doc   (if doc? [(first fdecl)] [])
-        [args & forms] (if doc? (rest fdecl) fdecl)
-        pre?  (and (< 1 (count forms)) (map? (first forms))) 
-        rpc   (when pre? (make-asserts (:rpc (first forms))))
-        head  (->> [(if pre? (dissoc (first forms) :rpc) (first forms))]
-                (remove #(or (nil? %) (and pre? (empty? %))))) 
-        name  (if rpc (with-meta name (assoc (meta name) :rpc true)) name)]
-    `(clojure.core/defn ~name ~@doc ~args ~@head ~@rpc ~@(rest forms))))
+  (let [[_ name [_ & arities]]
+        (macroexpand-1 `(clojure.core/defn ~name ~@fdecl))]
+    `(def ~name (fn ~@(map make-arity arities)))))
