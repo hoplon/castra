@@ -36,10 +36,10 @@
     (when c (reset! csrf c))
     (try (cljson->clj t) (catch js/Error e (jsex->ex e)))))
 
-(defn ajax [async? expr out err fin fails]
+(defn ajax [async? url expr out err fin fails]
   (let [csrf-kw   :tailrecursion.castra/csrf
         expr      (if (string? expr) expr (clj->cljson expr))
-        retry!    #(ajax async? expr out err fin (inc fails))
+        retry!    #(ajax async? url expr out err fin (inc fails))
         handle-ex #(if (and (< fails 2) (isa? %2 csrf-kw)) (retry!) (%1 %2))
         wrap-out  (fn [_ _ x] (let [d (xhr! x)] ((if (ex? d) err out) d)))
         wrap-err  (fn [x _ _] (let [d (xhr! x)] (handle-ex err (make-ex d))))
@@ -55,12 +55,12 @@
                    "processData"  false
                    "success"      wrap-out
                    "type"         "POST"
-                   "url"          *url*}]
+                   "url"          url}]
     (-> js/jQuery (.ajax (clj->js settings)))))
 
-(defn remote [async? expr & [out err fin]]
+(defn remote [async? url expr & [out err fin]]
   (let [wrap #(or % (constantly true))]
-    (ajax async? expr (wrap out) (wrap err) (wrap fin) 0)))
+    (ajax async? url expr (wrap out) (wrap err) (wrap fin) 0)))
 
 (def async (partial remote true))
 (def sync  (partial remote false))
@@ -71,11 +71,11 @@
   (let [url (or *url* (.. js/window -location -href))]
     (fn [& args]
       (swap! loading conj ::xhr)
-      (binding [*url* url]
-        (async
-          `[~endpoint ~@args]
-          (fn [x]
-            (reset! error nil)
-            (reset! state x))
-          (fn [x] (reset! error x))
-          (fn [_ _] (swap! loading safe-pop)))))))
+      (async
+        url
+        `[~endpoint ~@args]
+        (fn [x]
+          (reset! error nil)
+          (reset! state x))
+        (fn [x] (reset! error x))
+        (fn [_ _] (swap! loading safe-pop))))))
