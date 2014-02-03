@@ -6,9 +6,9 @@ Web application RPC library for Clojure and Ring.
 
 ## Installation
 
-Artifacts are published on [Clojars][1].
+Artifacts are published on Clojars.
 
-![latest version][3]
+[![latest version][3]][1]
 
 ## Usage
 
