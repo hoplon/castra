@@ -21,7 +21,14 @@ page.open(url, function(status) {
 });")
 
 (defn wrap-escaped-fragment
-  "FIXME: document this"
+  "Middleware to detect Google's '_escaped_fragment_' AJAX crawling requests [1]
+  and serve a PhantomJS rendered version of the page.
+
+  NB: This middleware needs to be wrapped in middleware that will provide the
+      :params request map key. A suitable candidate for this could be the ring
+      #'ring.middleware.params/wrap-params middleware, for instance.
+
+  [1]: https://developers.google.com/webmasters/ajax-crawling/docs/specification"
   [handler]
   (let [js-path (.getPath (doto (File/createTempFile "scrape-" ".js") (spit js)))
         scrape  #(let [{:keys [exit err out]} (sh/sh "phantomjs" js-path %)]
