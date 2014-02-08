@@ -2,8 +2,7 @@
   (import java.io.File)
   (:require
    [clojure.java.io    :as io]
-   [clojure.java.shell :as sh]
-   [ring.util.request  :as req]))
+   [clojure.java.shell :as sh]))
 
 (def js
   "
