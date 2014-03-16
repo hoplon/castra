@@ -7,7 +7,6 @@
 ;; You must not remove this notice, or any other, from this software.
 
 (ns tailrecursion.castra
-  (:refer-clojure :exclude [defn])
   (:require
    [clojure.set :as set]
    [tailrecursion.extype :as ex :refer [defex extend-ex]]))
@@ -65,7 +64,14 @@
                    ret#
                    (do ~@query)))))))))
 
-(defmacro defn [name & fdecl]
+(defmacro defrpc [name & fdecl]
   (let [[_ name [_ & arities]]
         (macroexpand-1 `(clojure.core/defn ~name ~@fdecl))]
     `(def ~name (fn ~@(map make-arity arities)))))
+
+(defmacro defrpc [name & fdecl]
+  (let [[_ name [_ & arities]]
+        (macroexpand-1 `(clojure.core/defn ~name ~@fdecl))]
+    `(def ~name (fn ~@(map make-arity arities)))))
+
+(def ^{:deprecated "1.0.2" :macro true} defn #'tailrecursion.castra/defrpc)
