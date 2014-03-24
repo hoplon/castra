@@ -1,7 +1,14 @@
 (ns tailrecursion.castra.core-test
-  (:use clojure.test
-        tailrecursion.castra.core))
+  (:require [clojure.test :refer :all]
+            [tailrecursion.castra :as c]
+            [tailrecursion.castra :refer (defrpc)]
+            :reload-all))
 
-(deftest a-test
-  (testing "FIXME, I fail."
-    (is (= 0 1))))
+(deftest define-rpc-fn
+  (testing "defn is an alias for defrpc"
+    (is (= (c/defn foo [x]
+             (+ 1 1))
+           (defrpc foo [x]
+             (+ 1 1)))))
+  (testing "defn is deprecated in 1.0.2"
+    (is (= (:deprecated (meta (var c/defn))) "1.0.2"))))
