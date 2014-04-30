@@ -17,6 +17,6 @@
            join?   false
            key     "a 16-byte secret"
            docroot (core/get-env :out-path)}}]
-  (comp (r/head) (r/dev-mode) (r/session-cookie key) (r/files docroot)
+  (comp (r/head) (r/dev-mode) (r/session-cookie key) (r/files docroot) (r/reload)
         (if (coll? namespaces) (apply castra namespaces) (castra namespaces))
         (r/jetty :port port :join? join?)))
