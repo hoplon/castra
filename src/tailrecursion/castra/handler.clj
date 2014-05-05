@@ -8,20 +8,11 @@
 
 (ns tailrecursion.castra.handler
   (:require
-    [ring.middleware.session.cookie :as c]
-    [ring.util.codec                :as u :refer [url-decode base64-encode]]
+    [ring.middleware.anti-forgery   :as a :refer [*anti-forgery-token*]]
     [clojure.set                    :as s :refer [intersection difference]]
     [tailrecursion.cljson           :as e :refer [cljson->clj clj->cljson]]
     [tailrecursion.castra           :as r :refer [ex ex->clj *request* *session*]]
     [cheshire.core                  :as j :refer [generate-string parse-string]]))
-
-(defn csrf! []
-  (let [tok1 (get-in @*request* [:headers "x-csrf"])
-        tok2 (:x-csrf @*session*)
-        tok! #(base64-encode (#'c/secure-random-bytes 16))]
-    (when-not (and tok1 (= tok1 tok2))
-      (swap! *session* assoc :x-csrf (tok!))
-      (throw (ex r/csrf)))))
 
 (defn do-rpc [vars [f & args]]
   (let [bad!  #(throw (ex r/fatal (ex r/not-found)))
@@ -32,7 +23,7 @@
 (defn select-vars [nsname & {:keys [only exclude]}]
   (let [to-var    #(resolve (symbol (str nsname) (str %)))
         to-vars   #(->> % (map to-var) (keep identity) set)
-        var-pubs  #(do (require %) (vals (ns-publics %))) 
+        var-pubs  #(do (require %) (vals (ns-publics %)))
         vars      (->> nsname var-pubs set)
         only      (if (seq only) (to-vars only) vars)
         exclude   (if (seq exclude) (to-vars exclude) #{})]
@@ -54,10 +45,10 @@
       (if-not (= :post (:request-method req))
         {:status 404 :headers {} :body "404 - Not Found"}
         (binding [*request* (atom req), *session* (atom (:session req))]
-          (let [f #(do (csrf!) (do-rpc vars (decode-tunnel %)))
+          (let [f #(do-rpc vars (decode-tunnel %))
                 d (try (encode-tunnel req (f req)) (catch Throwable e e))
                 x (if (instance? Throwable d) (ex->clj d))
                 s (:status x 200)
                 b (if x (clj->cljson x) d)
-                h (assoc head "X-Csrf" (:x-csrf @*session*))]
+                h (assoc head "X-CSRF-Token" (get @*session* "__anti-forgery-token"))]
             {:status s, :headers h, :body b, :session @*session*}))))))

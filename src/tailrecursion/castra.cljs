@@ -7,7 +7,6 @@
 ;; You must not remove this notice, or any other, from this software.
 
 (ns tailrecursion.castra
-  (:refer-clojure :exclude [isa?])
   (:require
     [tailrecursion.cljson :refer [cljson->clj clj->cljson]]))
 
@@ -17,7 +16,6 @@
 (defrecord CastraEx [type isa message data cause trace status severity])
 
 (def ex?  #(instance? CastraEx %))
-(def isa? #(contains? (conj (:isa %1 #{}) (:type %1)) %2))
 
 (let [dfl (CastraEx. nil #{} "Server error." nil [] "" 500 :error)]
   (defn make-ex [m]
@@ -32,7 +30,7 @@
 
 (defn xhr! [xhr]
   (let [t (.-responseText xhr)
-        c (.getResponseHeader xhr "X-Csrf")]
+        c (.getResponseHeader xhr "X-CSRF-Token")]
     (when c (reset! csrf c))
     (try (cljson->clj t) (catch js/Error e (jsex->ex e)))))
 
@@ -40,18 +38,18 @@
   (let [csrf-kw   :tailrecursion.castra/csrf
         expr      (if (string? expr) expr (clj->cljson expr))
         retry!    #(ajax async? url expr out err fin (inc fails))
-        handle-ex #(if (and (< fails 2) (isa? %2 csrf-kw)) (retry!) (%1 %2))
+        handle-ex #(if (and (< fails 2) (= 403 (.-status %3))) (retry!) (%1 %2))
         wrap-out  (fn [_ _ x] (let [d (xhr! x)] ((if (ex? d) err out) d)))
-        wrap-err  (fn [x _ _] (let [d (xhr! x)] (handle-ex err (make-ex d))))
+        wrap-err  (fn [x _ _] (let [d (xhr! x)] (handle-ex err (make-ex d) x)))
         settings  {"async"        async?
                    "complete"     fin
                    "contentType"  "application/json"
                    "data"         expr
                    "dataType"     "text"
-                   "error"        wrap-err 
-                   "headers"      {"X-Csrf"   @csrf
-                                   "X-Tunnel" "cljson"
-                                   "Accept"   "application/json"}
+                   "error"        wrap-err
+                   "headers"      {"X-CSRF-Token" @csrf
+                                   "X-Tunnel"     "cljson"
+                                   "Accept"       "application/json"}
                    "processData"  false
                    "success"      wrap-out
                    "type"         "POST"
