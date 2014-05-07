@@ -43,7 +43,8 @@
 (extend-ex error      exception {:severity :error})
 (extend-ex fatal      exception {:severity :fatal})
 
-(defn- make-arity [[bind & [m & body :as forms]]]
+(defn- make-arity
+  [[bind & [m & body :as forms]]]
   (cond
     (not (and (< 1 (count forms)) (map? m)))
     `(~bind (reset! *request* nil) ~@forms)
@@ -65,7 +66,12 @@
                    ret#
                    (do ~@query)))))))))
 
-(defmacro defn [name & fdecl]
+(defmacro defrpc
+  [name & fdecl]
   (let [[_ name [_ & arities]]
         (macroexpand-1 `(clojure.core/defn ~name ~@fdecl))]
     `(def ~name (fn ~@(map make-arity arities)))))
+
+(defmacro ^:deprecated defn
+  [& forms]
+  `(defrpc ~@forms))
