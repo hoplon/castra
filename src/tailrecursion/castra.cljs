@@ -11,7 +11,6 @@
   (:require
     [tailrecursion.cljson :refer [cljson->clj clj->cljson]]))
 
-(def ^:dynamic *url* nil)
 (def csrf (atom ""))
 
 (defrecord CastraEx [type isa message data cause trace status severity])
@@ -43,19 +42,20 @@
         handle-ex #(if (and (< fails 2) (isa? %2 csrf-kw)) (retry!) (%1 %2))
         wrap-out  (fn [_ _ x] (let [d (xhr! x)] ((if (ex? d) err out) d)))
         wrap-err  (fn [x _ _] (let [d (xhr! x)] (handle-ex err (make-ex d))))
-        settings  {"async"        async?
-                   "complete"     fin
-                   "contentType"  "application/json"
-                   "data"         expr
-                   "dataType"     "text"
-                   "error"        wrap-err 
-                   "headers"      {"X-Csrf"   @csrf
-                                   "X-Tunnel" "cljson"
-                                   "Accept"   "application/json"}
-                   "processData"  false
-                   "success"      wrap-out
-                   "type"         "POST"
-                   "url"          url}]
+        settings  {"async"           async?
+                   "complete"        fin
+                   "contentType"     "application/json"
+                   "data"            expr
+                   "dataType"        "text"
+                   "error"           wrap-err 
+                   "headers"         {"X-Csrf"   @csrf
+                                      "X-Tunnel" "cljson"
+                                      "Accept"   "application/json"}
+                   "processData"      false
+                   "success"         wrap-out
+                   "type"            "POST"
+                   "url"             url
+                   "xhrFields"       {"withCredentials" true}}]
     (-> js/jQuery (.ajax (clj->js settings)))))
 
 (defn remote [async? url expr & [out err fin]]
@@ -67,8 +67,8 @@
 
 (defn safe-pop [x] (or (try (pop x) (catch js/Error e)) x))
 
-(defn mkremote [endpoint state error loading]
-  (let [url (or *url* (.. js/window -location -href))]
+(defn mkremote [endpoint state error loading & [url]]
+  (let [url (or url (.. js/window -location -href))]
     (fn [& args]
       (swap! loading conj ::xhr)
       (async
