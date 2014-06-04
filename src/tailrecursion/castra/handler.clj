@@ -9,6 +9,7 @@
 (ns tailrecursion.castra.handler
   (:require
     [ring.middleware.session.cookie :as c]
+    [ring.util.request              :as q :refer [body-string]]
     [ring.util.codec                :as u :refer [url-decode base64-encode]]
     [clojure.set                    :as s :refer [intersection difference]]
     [tailrecursion.cljson           :as e :refer [cljson->clj clj->cljson]]
@@ -39,8 +40,8 @@
     (-> vars (intersection only) (difference exclude))))
 
 (defmulti decode-tunnel #(get-in % [:headers "x-tunnel"]))
-(defmethod decode-tunnel "cljson" [req] (cljson->clj (slurp (:body req))))
-(defmethod decode-tunnel :default [req] (parse-string (slurp (:body req))))
+(defmethod decode-tunnel "cljson" [req] (cljson->clj (body-string req)))
+(defmethod decode-tunnel :default [req] (parse-string (body-string req)))
 
 (defmulti encode-tunnel (fn [req x] (get-in req [:headers "x-tunnel"])))
 (defmethod encode-tunnel "cljson" [req x] (clj->cljson x))
