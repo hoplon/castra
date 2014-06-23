@@ -17,12 +17,10 @@
     [cheshire.core                  :as j :refer [generate-string parse-string]]))
 
 (defn csrf! []
-  (let [tok1 (get-in @*request* [:headers "x-csrf"])
-        tok2 (:x-csrf @*session*)
+  (let [tok1 (get-in @*request* [:headers "x-castra-csrf"])
         tok! #(base64-encode (#'c/secure-random-bytes 16))]
-    (when-not (and tok1 (= tok1 tok2))
-      (swap! *session* assoc :x-csrf (tok!))
-      (throw (ex r/csrf)))))
+    (swap! *session* (fn [x] (update-in x [:x-castra-csrf] #(or % (tok!)))))
+    (when-not (and tok1 (= tok1 (:x-castra-csrf @*session*))) (throw (ex r/csrf)))))
 
 (defn do-rpc [vars [f & args]]
   (let [bad!  #(throw (ex r/fatal (ex r/not-found)))
@@ -39,11 +37,11 @@
         exclude   (if (seq exclude) (to-vars exclude) #{})]
     (-> vars (intersection only) (difference exclude))))
 
-(defmulti decode-tunnel #(get-in % [:headers "x-tunnel"]))
+(defmulti decode-tunnel #(get-in % [:headers "x-castra-tunnel"]))
 (defmethod decode-tunnel "cljson" [req] (cljson->clj (body-string req)))
 (defmethod decode-tunnel :default [req] (parse-string (body-string req)))
 
-(defmulti encode-tunnel (fn [req x] (get-in req [:headers "x-tunnel"])))
+(defmulti encode-tunnel (fn [req x] (get-in req [:headers "x-castra-tunnel"])))
 (defmethod encode-tunnel "cljson" [req x] (clj->cljson x))
 (defmethod encode-tunnel :default [req x] (generate-string x))
 
@@ -60,5 +58,5 @@
                 x (if (instance? Throwable d) (ex->clj d))
                 s (:status x 200)
                 b (if x (clj->cljson x) d)
-                h (assoc head "X-Csrf" (:x-csrf @*session*))]
+                h (assoc head "X-Castra-Csrf" (:x-castra-csrf @*session*))]
             {:status s, :headers h, :body b, :session @*session*}))))))

@@ -32,7 +32,7 @@
 
 (defn xhr! [xhr]
   (let [t (.-responseText xhr)
-        c (.getResponseHeader xhr "X-Csrf")]
+        c (.getResponseHeader xhr "X-Castra-Csrf")]
     (when c (reset! csrf c))
     (try (cljson->clj t) (catch js/Error e (jsex->ex e)))))
 
@@ -49,9 +49,9 @@
                    "data"            expr
                    "dataType"        "text"
                    "error"           wrap-err 
-                   "headers"         {"X-Csrf"   @csrf
-                                      "X-Tunnel" "cljson"
-                                      "Accept"   "application/json"}
+                   "headers"         {"X-Castra-Csrf"   @csrf
+                                      "X-Castra-Tunnel" "cljson"
+                                      "Accept"          "application/json"}
                    "processData"      false
                    "success"         wrap-out
                    "type"            "POST"

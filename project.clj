@@ -1,4 +1,4 @@
-(defproject tailrecursion/castra "1.3.0"
+(defproject tailrecursion/castra "2.0.0"
   :description  "HTTP remote procedure call handler for Clojure."
   :url          "http://example.com/FIXME"
   :license      {:name "Eclipse Public License"
