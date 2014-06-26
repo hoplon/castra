@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/tailrecursion/castra.png?label=ready&title=Ready)](https://waffle.io/tailrecursion/castra)
 ![masada][4]
 
 # Castra
