@@ -52,7 +52,9 @@
     (fn [req]
       (if-not (= :post (:request-method req))
         {:status 404 :headers {} :body "404 - Not Found"}
-        (binding [*request* (atom req), *session* (atom (:session req))]
+        (binding [*print-meta* true
+                  *request*    (atom req)
+                  *session*    (atom (:session req))]
           (let [f #(do (csrf!) (do-rpc vars (decode-tunnel %)))
                 d (try (encode-tunnel req (f req)) (catch Throwable e e))
                 x (if (instance? Throwable d) (ex->clj d))
