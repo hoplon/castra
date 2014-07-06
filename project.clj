@@ -7,6 +7,7 @@
                  [cheshire                "5.2.0"]
                  [ring/ring-core          "1.2.1"]
                  [ring/ring-jetty-adapter "1.2.1"]
+                 [crypto-random           "1.2.0"]
                  [tailrecursion/cljson    "1.0.6"]
                  [tailrecursion/extype    "0.1.0"]
                  [tailrecursion/boot.ring "0.2.0"]])

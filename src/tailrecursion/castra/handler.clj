@@ -8,7 +8,7 @@
 
 (ns tailrecursion.castra.handler
   (:require
-    [ring.middleware.session.cookie :as c]
+    [crypto.random                  :as c]
     [ring.util.request              :as q :refer [body-string]]
     [ring.util.codec                :as u :refer [url-decode base64-encode]]
     [clojure.set                    :as s :refer [intersection difference]]
@@ -18,7 +18,7 @@
 
 (defn csrf! []
   (let [tok1 (get-in @*request* [:headers "x-castra-csrf"])
-        tok! #(base64-encode (#'c/secure-random-bytes 16))]
+        tok! #(c/base64 16)]
     (swap! *session* (fn [x] (update-in x [:x-castra-csrf] #(or % (tok!)))))
     (when-not (and tok1 (= tok1 (:x-castra-csrf @*session*))) (throw (ex r/csrf)))))
 
