@@ -11,7 +11,6 @@
   (:require
     [tailrecursion.cljson :refer [cljson->clj clj->cljson]]))
 
-(def csrf (atom ""))
 (def ^:dynamic *url* nil)
 
 (defrecord CastraEx [type isa message data cause trace status severity])
@@ -30,53 +29,48 @@
 
 (defn jsex->ex [e] (ex-server (.-message e)))
 
-(defn xhr! [xhr]
-  (let [t (.-responseText xhr)
-        c (.getResponseHeader xhr "X-Castra-Csrf")]
-    (when c (reset! csrf c))
-    (try (cljson->clj t) (catch js/Error e (jsex->ex e)))))
+(defn jq-ajax [async? url data headers done fail always]
+  (.. js/jQuery
+    (ajax (clj->js {"async"       async?
+                    "contentType" "application/json"
+                    "data"        expr
+                    "dataType"    "text"
+                    "headers"     headers
+                    "processData" false
+                    "type"        "POST"
+                    "url"         url}))
+    (done (fn [_ _ x] (done x)))
+    (fail (fn [x _ _] (fail x)))
+    (always (fn [_ _] (always)))))
 
-(defn ajax [async? url expr out err fin fails]
-  (let [csrf-kw   :tailrecursion.castra/csrf
+(defn ajax [async? url expr done fail always & {:keys [ajax-impl]}]
+  (let [headers   {"X-Castra-Csrf"   "true"
+                   "X-Castra-Tunnel" "cljson"
+                   "Accept"          "application/json"}
+        unserial  #(try (cljson->clj (.-responseText xhr))
+                        (catch js/Error e (jsex->ex e)))
         expr      (if (string? expr) expr (clj->cljson expr))
-        retry!    #(ajax async? url expr out err fin (inc fails))
-        handle-ex #(if (and (< fails 2) (isa? %2 csrf-kw)) (retry!) (%1 %2))
-        wrap-out  (fn [_ _ x] (let [d (xhr! x)] ((if (ex? d) err out) d)))
-        wrap-err  (fn [x _ _] (let [d (xhr! x)] (handle-ex err (make-ex d))))
-        settings  {"async"           async?
-                   "complete"        fin
-                   "contentType"     "application/json"
-                   "data"            expr
-                   "dataType"        "text"
-                   "error"           wrap-err 
-                   "headers"         {"X-Castra-Csrf"   @csrf
-                                      "X-Castra-Tunnel" "cljson"
-                                      "Accept"          "application/json"}
-                   "processData"      false
-                   "success"         wrap-out
-                   "type"            "POST"
-                   "url"             url
-                   "xhrFields"       {"withCredentials" true}}]
-    (-> js/jQuery (.ajax (clj->js settings)))))
+        wrap-fail #(fail (make-ex (unserial %)))
+        wrap-done #(let [d (unserial %)] ((if (ex? d) fail done) d))]
+    ((or ajax-impl jq-ajax) async? url expr headers wrap-done wrap-fail always)))
 
-(defn remote [async? url expr & [out err fin]]
+(defn remote [async? url expr & [done fail always]]
   (let [wrap #(or % (constantly true))]
-    (ajax async? url expr (wrap out) (wrap err) (wrap fin) 0)))
+    (ajax async? url expr (wrap done) (wrap fail) (wrap always))))
 
 (def async (partial remote true))
 (def sync  (partial remote false))
 
 (defn safe-pop [x] (or (try (pop x) (catch js/Error e)) x))
 
-(defn mkremote [endpoint state error loading & [url]]
+(defn mkremote [endpoint state error loading & [url ajax-impl]]
   (let [url (or url *url* (.. js/window -location -href))]
     (fn [& args]
       (swap! loading conj ::xhr)
       (async
         url
         `[~endpoint ~@args]
-        (fn [x]
-          (reset! error nil)
-          (reset! state x))
-        (fn [x] (reset! error x))
-        (fn [_ _] (swap! loading safe-pop))))))
+        #(do (reset! error nil) (reset! state %))
+        #(reset! error %)
+        #(swap! loading safe-pop)
+        :ajax-impl ajax-impl))))
