@@ -33,21 +33,21 @@
   (.. js/jQuery
     (ajax (clj->js {"async"       async?
                     "contentType" "application/json"
-                    "data"        expr
+                    "data"        data
                     "dataType"    "text"
                     "headers"     headers
                     "processData" false
                     "type"        "POST"
                     "url"         url}))
-    (done (fn [_ _ x] (done x)))
-    (fail (fn [x _ _] (fail x)))
+    (done (fn [_ _ x] (done (aget x "responseText"))))
+    (fail (fn [x _ _] (fail (aget x "responseText"))))
     (always (fn [_ _] (always)))))
 
 (defn ajax [async? url expr done fail always & {:keys [ajax-impl]}]
   (let [headers   {"X-Castra-Csrf"   "true"
                    "X-Castra-Tunnel" "cljson"
                    "Accept"          "application/json"}
-        unserial  #(try (cljson->clj (.-responseText xhr))
+        unserial  #(try (cljson->clj %)
                         (catch js/Error e (jsex->ex e)))
         expr      (if (string? expr) expr (clj->cljson expr))
         wrap-fail #(fail (make-ex (unserial %)))
