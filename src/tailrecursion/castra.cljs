@@ -54,9 +54,9 @@
         wrap-done #(let [d (unserial %)] ((if (ex? d) fail done) d))]
     ((or ajax-impl jq-ajax) async? url expr headers wrap-done wrap-fail always)))
 
-(defn remote [async? url expr & [done fail always]]
+(defn remote [async? url expr & [done fail always & {:keys [ajax-impl]}]]
   (let [wrap #(or % (constantly true))]
-    (ajax async? url expr (wrap done) (wrap fail) (wrap always))))
+    (ajax async? url expr (wrap done) (wrap fail) (wrap always) :ajax-impl ajax-impl)))
 
 (def async (partial remote true))
 (def sync  (partial remote false))
