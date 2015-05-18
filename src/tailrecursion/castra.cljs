@@ -7,9 +7,7 @@
 ;; You must not remove this notice, or any other, from this software.
 
 (ns tailrecursion.castra
-  (:refer-clojure :exclude [isa?])
-  (:require
-    [tailrecursion.cljson :refer [cljson->clj clj->cljson]]))
+  (:require [cognitect.transit :as t]))
 
 (def ^:dynamic *url* nil)
 (def ^:dynamic *validate-only* nil)
@@ -31,39 +29,40 @@
                     "type"        "POST"
                     "url"         url}))
     (done (fn [_ _ x] (done (aget x "responseText"))))
-    (fail (fn [x _ _] (fail (aget x "responseText"))))
+    (fail (fn [x _ _] (when (not= 0 (.-status x)) (fail (aget x "responseText")))))
     (always (fn [_ _] (always)))))
 
-(defn- boolean* [x] (not (not x)))
+(def ajax-impl (atom jq-ajax))
+(def json->clj (atom (partial t/read (t/reader :json))))
+(def clj->json (atom (partial t/write (t/writer :json))))
 
-(defn ajax [url expr done fail always & {:keys [ajax-impl]}]
+(defn ajax [url expr done fail always]
   (let [headers   {"X-Castra-Csrf"          "true"
-                   "X-Castra-Tunnel"        "cljson"
-                   "X-Castra-Validate-Only" (str (boolean* *validate-only*))
+                   "X-Castra-Tunnel"        "transit"
+                   "X-Castra-Validate-Only" (str (boolean *validate-only*))
                    "Accept"                 "application/json"}
-        unserial  #(try (cljson->clj %)
+        unserial  #(try (@json->clj %)
                         (catch js/Error e (ex-info "Server error." {} e)))
-        expr      (if (string? expr) expr (clj->cljson expr))
+        expr      (if (string? expr) expr (@clj->json expr))
         wrap-fail #(fail (make-ex (unserial %)))
         wrap-done #(let [d (unserial %)] ((if (ex? d) fail done) d))]
-    ((or ajax-impl jq-ajax) url expr headers wrap-done wrap-fail always)))
+    (@ajax-impl url expr headers wrap-done wrap-fail always)))
 
-(defn remote [url expr & [done fail always & {:keys [ajax-impl]}]]
+(defn remote [url expr & [done fail always]]
   (let [wrap #(or % (constantly true))]
-    (ajax url expr (wrap done) (wrap fail) (wrap always) :ajax-impl ajax-impl)))
+    (ajax url expr (wrap done) (wrap fail) (wrap always))))
 
 (defn safe-pop [x] (or (try (pop x) (catch js/Error e)) x))
 
-(defn mkremote [endpoint state error loading & [url ajax-impl]]
+(defn mkremote [endpoint state error loading & {:keys [url]}]
   (let [url (or url *url* (.. js/window -location -href))]
     (fn [& args]
       (let [p (.Deferred js/jQuery)]
-        (swap! loading conj ::xhr)
-        (remote
-          url
-          `[~endpoint ~@args]
-          #(do (reset! error nil) (reset! state %) (.resolve p %))
-          #(do (reset! error %) (.reject p %))
-          #(swap! loading safe-pop)
-          :ajax-impl ajax-impl)
-        p))))
+        (swap! loading (fnil conj []) p)
+        (let [xhr (remote
+                    url
+                    `[~endpoint ~@args]
+                    #(do (reset! error nil) (reset! state %) (.resolve p %))
+                    #(do (reset! error %) (.reject p %))
+                    #(swap! loading (fn [x] (vec (remove (partial = p) x)))))]
+          (doto p (aset "xhr" xhr)))))))

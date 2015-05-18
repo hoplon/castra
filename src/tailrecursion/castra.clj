@@ -13,31 +13,26 @@
 (def ^:dynamic *session* (atom nil))
 (def ^:dynamic *validate-only* nil)
 
-(defn ex [message data & [cause]]
-  (ex-info message (assoc data ::exception true) cause))
-
-(defn dfl-ex [e]
-  (ex "Server error." {} e))
-
-(defn ex? [e]
-  (::exception (ex-data e)))
+(defn ex     [msg data & [cause]] (ex-info msg (assoc data ::exception true) cause))
+(defn ex?    [e]                  (::exception (ex-data e)))
+(defn dfl-ex [e]                  (ex "Server error." {} e))
 
 (defn- make-arity [[bind & [m & body :as forms]]]
   (if (not (and (< 1 (count forms)) (map? m)))
     (make-arity (into [bind {}] (if (seq forms) forms [nil])))
     (let [{pre :rpc/pre query :rpc/query} m
-          pre (when pre [pre])
           qry (when query [query])
           m' (not-empty (dissoc m :rpc/pre :rpc/query))]
       `(~bind
          ~@(when m' [m'])
          (let [req# @*request*]
            (reset! *request* nil)
-           ~@pre
+           (when req#
+             ~@(when pre [`(assert ~pre)]))
            (when (not *validate-only*)
              (if-not req#
                (do ~@body)
-               (do ~@body ~@qry))))))))
+               (do ~@body ~@(when query [query])))))))))
 
 (defmacro defrpc [name & fdecl]
   (let [[_ name [_ & arities]]

@@ -1,15 +1,14 @@
 (ns tailrecursion.castra.middleware
   (import java.io.File)
   (:require
-    [clojure.java.io      :as io]
     [clojure.java.shell   :as sh]
+    [cognitect.transit    :as t]
     [ring.util.request    :as q :refer [body-string]]
-    [ring.util.codec      :as u :refer [url-decode base64-encode]]
     [clojure.set          :as s :refer [intersection difference]]
-    [tailrecursion.cljson :as e :refer [cljson->clj clj->cljson]]
     [tailrecursion.castra :as r :refer [ex ex? dfl-ex *request* *session*]]
-    [cheshire.core        :as j :refer [generate-string parse-string]]
-    [clojure.stacktrace   :as t :refer [print-cause-trace print-stack-trace]]))
+    [clojure.stacktrace   :as u :refer [print-cause-trace print-stack-trace]])
+  (:import
+    [java.io ByteArrayInputStream ByteArrayOutputStream]))
 
 (defn- ex->clj [e]
   (let [e (if (ex? e) e (dfl-ex e))]
@@ -41,13 +40,13 @@
         exclude   (if (seq exclude) (to-vars exclude) #{})]
     (-> vars (intersection only) (difference exclude))))
 
-(defmulti  decode-tunnel #(get-in % [:headers "x-castra-tunnel"]))
-(defmethod decode-tunnel "cljson" [req] (cljson->clj (body-string req)))
-(defmethod decode-tunnel :default [req] (parse-string (body-string req)))
+(def clj->json
+  (atom #(let [out (ByteArrayOutputStream. 4096)]
+           (t/write (t/writer out :json) %2)
+           (.toString out))))
 
-(defmulti  encode-tunnel (fn [req x] (get-in req [:headers "x-castra-tunnel"])))
-(defmethod encode-tunnel "cljson" [req x] (clj->cljson x))
-(defmethod encode-tunnel :default [req x] (generate-string x))
+(def json->clj
+  (atom #(-> (ByteArrayInputStream. (.getBytes %2)) (t/reader :json) t/read)))
 
 (defn wrap-castra [handler & namespaces]
   (let [head {"Content-type" "application/json"}
@@ -60,9 +59,9 @@
                   *request*    (atom req)
                   *session*    (atom (:session req))
                   r/*validate-only* (get-in req [:headers "x-castra-validate-only"])]
-          (let [f #(do (csrf!) (do-rpc vars (decode-tunnel %)))
-                d (try (encode-tunnel req (f req)) (catch Throwable e e))
-                x (when (instance? Throwable d) (encode-tunnel req (ex->clj d)))]
+          (let [f #(do (csrf!) (do-rpc vars (@json->clj req (body-string %))))
+                d (try (@clj->json req (f req)) (catch Throwable e e))
+                x (when (instance? Throwable d) (@clj->json req (ex->clj d)))]
             {:status (if x 500 200), :headers head, :body (or x d), :session @*session*}))))))
 
 ;; AJAX Crawling Middleware ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
