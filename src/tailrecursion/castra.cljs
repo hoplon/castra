@@ -9,19 +9,39 @@
 (ns tailrecursion.castra
   (:require [cognitect.transit :as t]))
 
-(def ^:dynamic *validate-only* nil)
-(def ^:dynamic *ajax-timeout*  (atom nil))
+(def ^:dynamic *validate-only*
+  "Only validate request parameters, don't actually do it?"
+  nil)
 
-(def json->clj (atom (partial t/read (t/reader :json))))
-(def clj->json (atom (partial t/write (t/writer :json))))
+(def ^:dynamic *ajax-timeout*
+  "The timeout for XHR requests in ms (0 means no timeout)."
+  (atom 0))
+
+(def ^:dynamic *with-credentials*
+  "Send cookies when making CORS requests?"
+  (atom true))
+
+(def json->clj
+  "Atom containing function to convert wire format JSON to ClojureScript data."
+  (atom (partial t/read (t/reader :json))))
+
+(def clj->json
+  "Atom containing function to convert ClojureScript data to wire format JSON."
+  (atom (partial t/write (t/writer :json))))
 
 (defn- safe-pop
   [x]
   (or (try (pop x) (catch js/Error e)) x))
 
-(defn ex? [x] (instance? ExceptionInfo x))
+(defn ex?
+  "Returns true if x is an ExceptionInfo."
+  [x]
+  (instance? ExceptionInfo x))
 
 (defn make-ex
+  "Given either an existing exception or a map, returns an ExceptionInfo
+  object with the special status and serverStack properties set. If ex is
+  an exception already then ex itself is returned."
   [ex]
   (if (ex? ex)
     ex
@@ -31,32 +51,38 @@
         (aset "status" status)))))
 
 (defn json->clj*
+  "Converts wire format JSON to CLJS data (see json->clj above). If an
+  exception is thrown during conversion an ExceptionInfo object is returned."
   [x]
   (try (@json->clj x)
        (catch js/Error e
          (make-ex {:message "Server Error" :cause e}))))
 
 (def ajax-impl
+  "Atom containing the ajax request implementation. The default is to use the
+  standard jQuery ajax machinery."
   (atom (fn [url data headers done fail always]
-          (-> js/jQuery
-              (.ajax (clj->js (merge {"async"       true
-                                      "contentType" "application/json"
-                                      "data"        data
-                                      "dataType"    "text"
-                                      "headers"     headers
-                                      "processData" false
-                                      "type"        "POST"
-                                      "url"         url}
-                                     (when-let [t @*ajax-timeout*] {"timeout" t}))))
-              (.done (fn [_ _ x] (done (json->clj* (aget x "responseText")))))
-              (.fail (fn [x t r] (let [status  (.-status x)
-                                       head    (aget x "getResponseHeader")
-                                       tunnel? (.call head x "X-Castra-Tunnel")
-                                       body    (if-not tunnel?
-                                                 {:message r :status status}
-                                                 (json->clj* (aget x "responseText")))]
-                                   (fail (make-ex body)))))
-              (.always (fn [_ _] (always)))))))
+          (let [opts {"async"       true
+                      "contentType" "application/json"
+                      "data"        data
+                      "dataType"    "text"
+                      "headers"     headers
+                      "processData" false
+                      "type"        "POST"
+                      "url"         url
+                      "timeout"     *ajax-timeout*
+                      "xhrFields"   {"withCredentials" @*with-credentials*}}]
+            (-> js/jQuery
+                (.ajax (clj->js opts))
+                (.done (fn [_ _ x] (done (json->clj* (aget x "responseText")))))
+                (.fail (fn [x t r] (let [status  (.-status x)
+                                         head    (aget x "getResponseHeader")
+                                         tunnel? (.call head x "X-Castra-Tunnel")
+                                         body    (if-not tunnel?
+                                                   {:message r :status status}
+                                                   (json->clj* (aget x "responseText")))]
+                                     (fail (make-ex body)))))
+                (.always (fn [_ _] (always))))))))
 
 (defn- ajax
   [url expr done fail always]
@@ -69,6 +95,9 @@
     (@ajax-impl url expr headers done fail always)))
 
 (defn mkremote
+  "Given state error and loading input cells, returns an RPC function. The
+  optional :url keyword argument can be used to specify the URL to which the
+  POST requests will be made."
   [endpoint state error loading & {:keys [url]}]
   (let [url (or url (.. js/window -location -href))]
     (fn [& args]
