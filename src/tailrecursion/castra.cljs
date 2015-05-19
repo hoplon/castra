@@ -58,7 +58,7 @@
        (catch js/Error e
          (make-ex {:message "Server Error" :cause e}))))
 
-(def ajax-impl
+(def ajax-fn
   "Atom containing the ajax request implementation. The default is to use the
   standard jQuery ajax machinery."
   (atom (fn [url data headers done fail always]
@@ -92,13 +92,22 @@
                  "Accept"                 "application/json"}
         expr    (if (string? expr) expr (@clj->json expr))
         done    #((if (ex? %) fail done) %)]
-    (@ajax-impl url expr headers done fail always)))
+    (ajax-fn url expr headers done fail always)))
+
+(defn default-opts
+  [opts]
+  (->> opts (merge {:ajax-fn     ajax-fn
+                    :json->clj   json->clj
+                    :clj->json   clj->json
+                    :timeout     timeout
+                    :credentials credentials
+                    :url         (.. js/window -location -href)})))
 
 (defn mkremote
   "Given state error and loading input cells, returns an RPC function. The
   optional :url keyword argument can be used to specify the URL to which the
   POST requests will be made."
-  [endpoint state error loading & {:keys [url]}]
+  [endpoint state error loading & [opts]]
   (let [url (or url (.. js/window -location -href))]
     (fn [& args]
       (let [p (.Deferred js/jQuery)]
