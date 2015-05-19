@@ -49,7 +49,8 @@
   (atom #(-> (ByteArrayInputStream. (.getBytes %2)) (t/reader :json) t/read)))
 
 (defn wrap-castra [handler & namespaces]
-  (let [head {"Content-type" "application/json"}
+  (let [head {"X-Castra-Tunnel" "transit"
+              "Content-type"    "application/json"}
         seq* #(or (try (seq %) (catch Throwable e)) [%])
         vars (->> namespaces (map seq*) (mapcat #(apply select-vars %)) set)]
     (fn [req]
@@ -58,7 +59,7 @@
         (binding [*print-meta* true
                   *request*    (atom req)
                   *session*    (atom (:session req))
-                  r/*validate-only* (get-in req [:headers "x-castra-validate-only"])]
+                  r/*validate-only* (= "true" (get-in req [:headers "x-castra-validate-only"]))]
           (let [f #(do (csrf!) (do-rpc vars (@json->clj req (body-string %))))
                 d (try (@clj->json req (f req)) (catch Throwable e e))
                 x (when (instance? Throwable d) (@clj->json req (ex->clj d)))]
