@@ -15,6 +15,10 @@
   [x]
   (or (try (pop x) (catch js/Error e)) x))
 
+(defn- assoc-when
+  [m k v]
+  (if-not v m (assoc m k v)))
+
 ;; public api ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def ^:dynamic *validate-only*
@@ -38,45 +42,61 @@
         (aset "serverStack" stack)
         (aset "status" status)))))
 
+(defn- xhr-resp-headers
+  [xhr headers]
+  (reduce #(if-let [x (.getResponseHeader xhr %2)] (assoc %1 %2 x) %1) {} headers))
+
 (defn ajax-fn
   "Ajax request implementation using the standard jQuery ajax machinery."
-  [{:keys [url json->clj timeout credentials]} data headers done fail always]
-  (let [opts {"async"       true
-              "contentType" "application/json"
-              "data"        data
-              "dataType"    "text"
-              "headers"     headers
-              "processData" false
-              "type"        "POST"
-              "url"         url
-              "timeout"     timeout
-              "xhrFields"   {"withCredentials" credentials}}
-        ex    #(make-ex {:message "Server Error" :cause %})]
-    (-> js/jQuery
-        (.ajax (clj->js opts))
-        (.done (fn [_ _ x]
-                 (done (try (json->clj (aget x "responseText"))
-                            (catch js/Error e (ex e))))))
-        (.fail (fn [x t r]
-                 (let [status  (.-status x)
-                       head    (aget x "getResponseHeader")
-                       tunnel? (.call head x "X-Castra-Tunnel")
-                       body    (if-not tunnel?
-                                 {:message r :status status}
-                                 (try (json->clj (aget x "responseText"))
-                                      (catch js/Error e (ex e))))]
-                   (fail (make-ex body)))))
-        (.always (fn [_ _] (always))))))
+  [{:keys [url timeout credentials headers body]}]
+  (let [prom (.Deferred js/jQuery)
+        opts (-> {"async"       true
+                  "contentType" "application/json"
+                  "data"        body
+                  "dataType"    "text"
+                  "headers"     headers
+                  "processData" false
+                  "type"        "POST"
+                  "url"         url
+                  "timeout"     timeout}
+                 (assoc-when "xhrFields" (assoc-when nil "withCredentials" credentials)))
+        resp (fn [x]
+               {:status      (.-status x)
+                :status-text (.-statusText x)
+                :body        (.-responseText x)
+                :headers     (xhr-resp-headers x ["X-Castra-Tunnel" "X-Castra-Session"])})]
+    (-> (.ajax js/jQuery (clj->js opts))
+        (.done (fn [_ _ x] (.resolve prom (resp x))))
+        (.fail (fn [x _ _] (.reject  prom (resp x)))))
+    prom))
+
+(def ^:private storage-key (str ::session))
+
+(defn- get-session [ ] (.getItem js/localStorage storage-key))
+(defn- set-session [x] (if (= x "DELETE")
+                         (.removeItem js/localStorage storage-key)
+                         (when x (.setItem js/localStorage storage-key x))))
 
 (defn- ajax
-  [{:keys [ajax-fn clj->json] :as opts} expr done fail always]
-  (let [headers {"X-Castra-Csrf"          "true"
-                 "X-Castra-Tunnel"        "transit"
-                 "X-Castra-Validate-Only" (str (boolean *validate-only*))
-                 "Accept"                 "application/json"}
-        expr    (if (string? expr) expr (clj->json expr))
-        done    #((if (ex? %) fail done) %)]
-    (ajax-fn opts expr headers done fail always)))
+  [{:keys [ajax-fn clj->json json->clj] :as opts} expr]
+  (let [prom    (.Deferred js/jQuery)
+        headers (-> {"X-Castra-Csrf"          "true"
+                     "X-Castra-Tunnel"        "transit"
+                     "X-Castra-Validate-Only" (str (boolean *validate-only*))
+                     "Accept"                 "application/json"}
+                    (assoc-when "X-Castra-Session" (get-session)))
+        body    (if (string? expr) expr (clj->json expr))
+        ex      #(make-ex {:message "Server Error" :cause %})
+        prom'   (ajax-fn (merge opts {:headers headers :body body}))]
+    (-> prom'
+        (.done   (fn [{:keys [headers body]}]
+                   (set-session (get headers "X-Castra-Session"))
+                   (.resolve prom (try (json->clj body) (catch js/Error e (ex e))))))
+        (.fail   (fn [{:keys [headers body status status-text]}]
+                   (.reject prom (make-ex (if-not (get headers "X-Castra-Tunnel")
+                                            {:status status :message status-text}
+                                            (try (json->clj body) (catch js/Error e (ex e)))))))))
+    (doto prom (aset "xhr" prom'))))
 
 (defn with-default-opts
   [& [opts]]
@@ -93,12 +113,10 @@
   POST requests will be made."
   [endpoint state error loading & [opts]]
   (fn [& args]
-    (let [p (.Deferred js/jQuery)]
-      (swap! loading (fnil conj []) p)
-      (let [xhr (ajax
-                  (with-default-opts opts)
-                  `[~endpoint ~@args]
-                  #(do (reset! error nil) (reset! state %) (.resolve p %))
-                  #(do (reset! error %) (.reject p %))
-                  #(swap! loading (fn [x] (vec (remove (partial = p) x)))))]
-        (doto p (aset "xhr" xhr))))))
+    (let [prom (.Deferred js/jQuery)]
+      (swap! loading (fnil conj []) prom)
+      (let [prom' (-> (ajax (with-default-opts opts) `[~endpoint ~@args])
+                      (.done   #(do (reset! error nil) (reset! state %) (.resolve prom %)))
+                      (.fail   #(do (reset! error %) (.reject prom %)))
+                      (.always #(swap! loading (fn [x] (vec (remove (partial = prom) x))))))]
+        (doto prom (aset "xhr" (aget prom' "xhr")))))))

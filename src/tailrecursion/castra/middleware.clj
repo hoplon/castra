@@ -1,12 +1,13 @@
 (ns tailrecursion.castra.middleware
   (import java.io.File)
   (:require
-    [clojure.java.shell   :as sh]
-    [cognitect.transit    :as t]
-    [ring.util.request    :as q :refer [body-string]]
-    [clojure.set          :as s :refer [intersection difference]]
-    [tailrecursion.castra :as r :refer [ex ex? dfl-ex *request* *session*]]
-    [clojure.stacktrace   :as u :refer [print-cause-trace print-stack-trace]])
+    [clojure.java.shell             :as sh]
+    [cognitect.transit              :as t]
+    [ring.middleware.session.cookie :as c]
+    [ring.util.request              :as q :refer [body-string]]
+    [clojure.set                    :as s :refer [intersection difference]]
+    [tailrecursion.castra           :as r :refer [ex ex? dfl-ex *request* *session* *validate-only*]]
+    [clojure.stacktrace             :as u :refer [print-cause-trace print-stack-trace]])
   (:import
     [java.io ByteArrayInputStream ByteArrayOutputStream]))
 
@@ -48,6 +49,37 @@
 (def json->clj
   (atom #(-> (ByteArrayInputStream. (.getBytes %2)) (t/reader :json) t/read)))
 
+(def default-timeout (* 1000 60 60 24))
+
+(defn wrap-castra-session [handler ^String key & [{:keys [timeout]}]]
+  (let [key     (.getBytes key)
+        seal    (var-get #'ring.middleware.session.cookie/seal)
+        unseal  (var-get #'ring.middleware.session.cookie/unseal)
+        encrypt #(try (seal key %) (catch Throwable _))
+        decrypt #(try (unseal key %) (catch Throwable _))]
+    (assert (and (= (type (byte-array 0)) (type key))
+                 (= (count key) 16))
+            "the secret key must be 16 bytes")
+    (fn [req]
+      (if-not (= :post (:request-method req))
+        (handler req)
+        (let [now    (System/currentTimeMillis)
+              sess?  (contains? (:headers req) "x-castra-session")
+              raw    (get-in req [:headers "x-castra-session"])
+              data   (when raw (decrypt raw))
+              expire (+ (or (:time data) now) (or timeout default-timeout))
+              sess   (:data (when (and data (< now expire)) data))
+              req'   (if-not sess? req (assoc req :session sess))
+              resp   (handler req')
+              data'  (if (and sess? (not (:session resp)))
+                       "DELETE"
+                       (when-let [s (:session resp)]
+                         (encrypt {:time now :data s})))]
+          (if-not data'
+            resp
+            (-> (dissoc resp :session)
+                (assoc-in [:headers "X-Castra-Session"] data'))))))))
+
 (defn wrap-castra [handler & namespaces]
   (let [head {"X-Castra-Tunnel" "transit"
               "Content-type"    "application/json"}
@@ -56,10 +88,10 @@
     (fn [req]
       (if-not (= :post (:request-method req))
         (handler req)
-        (binding [*print-meta* true
-                  *request*    (atom req)
-                  *session*    (atom (:session req))
-                  r/*validate-only* (= "true" (get-in req [:headers "x-castra-validate-only"]))]
+        (binding [*print-meta*    true
+                  *request*       (atom req)
+                  *session*       (atom (:session req))
+                  *validate-only* (= "true" (get-in req [:headers "x-castra-validate-only"]))]
           (let [f #(do (csrf!) (do-rpc vars (@json->clj req (body-string %))))
                 d (try (@clj->json req (f req)) (catch Throwable e e))
                 x (when (instance? Throwable d) (@clj->json req (ex->clj d)))]
