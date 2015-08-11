@@ -116,7 +116,9 @@
     (let [prom (.Deferred js/jQuery)]
       (swap! loading (fnil conj []) prom)
       (let [prom' (-> (ajax (with-default-opts opts) `[~endpoint ~@args])
-                      (.done   #(do (reset! error nil) (reset! state %) (.resolve prom %)))
+                      (.done   #(do (reset! error nil)
+                                    (when-not *validate-only* (reset! state %))
+                                    (.resolve prom %)))
                       (.fail   #(do (reset! error %) (.reject prom %)))
                       (.always #(swap! loading (fn [x] (vec (remove (partial = prom) x))))))]
         (doto prom (aset "xhr" (aget prom' "xhr")))))))
