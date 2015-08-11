@@ -80,11 +80,13 @@
             (-> (dissoc resp :session)
                 (assoc-in [:headers "X-Castra-Session"] data'))))))))
 
-(defn wrap-castra [handler & namespaces]
-  (let [head {"X-Castra-Tunnel" "transit"
+(defn wrap-castra [handler & [opts & more :as namespaces]]
+  (let [opts (when (map? opts) opts)
+        nses (if opts more namespaces)
+        head {"X-Castra-Tunnel" "transit"
               "Content-type"    "application/json"}
         seq* #(or (try (seq %) (catch Throwable e)) [%])
-        vars (->> namespaces (map seq*) (mapcat #(apply select-vars %)) set)]
+        vars (fn [] (->> nses (map seq*) (mapcat #(apply select-vars %)) set))]
     (fn [req]
       (if-not (= :post (:request-method req))
         (handler req)
@@ -92,7 +94,7 @@
                   *request*       (atom req)
                   *session*       (atom (:session req))
                   *validate-only* (= "true" (get-in req [:headers "x-castra-validate-only"]))]
-          (let [f #(do (csrf!) (do-rpc vars (@json->clj req (body-string %))))
+          (let [f #(do (csrf!) (do-rpc (vars) (@json->clj req (body-string %))))
                 d (try (@clj->json req (f req)) (catch Throwable e e))
                 x (when (instance? Throwable d) (@clj->json req (ex->clj d)))]
             {:status (if x 500 200), :headers head, :body (or x d), :session @*session*}))))))
