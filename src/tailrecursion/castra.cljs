@@ -113,12 +113,16 @@
   POST requests will be made."
   [endpoint state error loading & [opts]]
   (fn [& args]
-    (let [prom (.Deferred js/jQuery)]
-      (swap! loading (fnil conj []) prom)
+    (let [live?  (not *validate-only*)
+          prom   (.Deferred js/jQuery)
+          unload #(vec (remove (partial = prom) %))]
+      (when live? (swap! loading (fnil conj []) prom))
       (let [prom' (-> (ajax (with-default-opts opts) `[~endpoint ~@args])
-                      (.done   #(do (reset! error nil)
-                                    (when-not *validate-only* (reset! state %))
+                      (.done   #(do (when live?
+                                      (reset! error nil)
+                                      (reset! state %))
                                     (.resolve prom %)))
-                      (.fail   #(do (reset! error %) (.reject prom %)))
-                      (.always #(swap! loading (fn [x] (vec (remove (partial = prom) x))))))]
+                      (.fail   #(do (when live? (reset! error %))
+                                    (.reject prom %)))
+                      (.always #(when live? (swap! loading unload))))]
         (doto prom (aset "xhr" (aget prom' "xhr")))))))
