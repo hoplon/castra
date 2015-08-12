@@ -4,23 +4,33 @@
     [clojure.java.shell             :as sh]
     [cognitect.transit              :as t]
     [ring.middleware.session.cookie :as c]
+    [clojure.string                 :as string]
     [ring.util.request              :as q :refer [body-string]]
     [clojure.set                    :as s :refer [intersection difference]]
     [tailrecursion.castra           :as r :refer [ex ex? dfl-ex *request* *session* *validate-only*]]
     [clojure.stacktrace             :as u :refer [print-cause-trace print-stack-trace]])
   (:import
+    [java.util.regex Pattern]
     [java.io ByteArrayInputStream ByteArrayOutputStream]))
+
+;; hat tip to io.aviso/pretty
+(def ^:const ^:private ansi-pattern (Pattern/compile "\\e\\[.*?m"))
+(defn ^String strip-ansi
+  "Removes ANSI codes from a string, returning just the raw text."
+  [string]
+  (string/replace string ansi-pattern ""))
 
 (defn- ex->clj [e]
   (let [e (if (ex? e) e (dfl-ex e))]
     {:message (.getMessage e)
      :data    (ex-data e)
-     :stack   (with-out-str
-                (try (print-cause-trace e)
-                     (catch Throwable x
-                       (try (print-stack-trace e)
-                            (catch Throwable x
-                              (printf "No stack trace: %s" (.getMessage x)))))))}))
+     :stack   (strip-ansi
+                (with-out-str
+                  (try (print-cause-trace e)
+                       (catch Throwable x
+                         (try (print-stack-trace e)
+                              (catch Throwable x
+                                (printf "No stack trace: %s" (.getMessage x))))))))}))
 
 (defn- csrf! []
   (when-not (get-in @*request* [:headers "x-castra-csrf"])
