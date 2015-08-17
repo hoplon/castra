@@ -78,7 +78,7 @@
                          (when x (.setItem js/localStorage storage-key x))))
 
 (defn- ajax
-  [{:keys [ajax-fn clj->json json->clj] :as opts} expr]
+  [{:keys [ajax-fn clj->json json->clj on-error] :as opts} expr]
   (let [prom    (.Deferred js/jQuery)
         headers (-> {"X-Castra-Csrf"          "true"
                      "X-Castra-Tunnel"        "transit"
@@ -95,13 +95,16 @@
         (.fail   (fn [{:keys [headers body status status-text]}]
                    (.reject prom (make-ex (if-not (get headers "X-Castra-Tunnel")
                                             {:status status :message status-text}
-                                            (try (json->clj body) (catch js/Error e (ex e)))))))))
+                                            (-> (json->clj body)
+                                                (try (catch js/Error e (ex e)))
+                                                (doto on-error))))))))
     (doto prom (aset "xhr" prom'))))
 
 (defn with-default-opts
   [& [opts]]
   (->> opts (merge {:timeout     0
                     :credentials true
+                    :on-error    identity
                     :ajax-fn     ajax-fn
                     :json->clj   (partial t/read (t/reader :json))
                     :clj->json   (partial t/write (t/writer :json))
