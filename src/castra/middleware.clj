@@ -1,4 +1,4 @@
-(ns tailrecursion.castra.middleware
+(ns castra.middleware
   (import java.io.File)
   (:require
     [clojure.java.shell             :as sh]
@@ -7,7 +7,7 @@
     [clojure.string                 :as string]
     [ring.util.request              :as q :refer [body-string]]
     [clojure.set                    :as s :refer [intersection difference]]
-    [tailrecursion.castra           :as r :refer [ex ex? dfl-ex *request* *session* *validate-only*]]
+    [castra.core                    :as r :refer [ex ex? dfl-ex *request* *session* *validate-only*]]
     [clojure.stacktrace             :as u :refer [print-cause-trace print-stack-trace]])
   (:import
     [java.util.regex Pattern]

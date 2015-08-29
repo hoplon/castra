@@ -6,7 +6,7 @@
 ;; the terms of this license.
 ;; You must not remove this notice, or any other, from this software.
 
-(ns tailrecursion.castra)
+(ns castra.core)
 
 (def ^:dynamic *request* (atom nil))
 (def ^:dynamic *session* (atom nil))

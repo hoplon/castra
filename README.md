@@ -3,7 +3,7 @@
 
 # Castra
 
-Web application RPC library for Clojure and Ring.
+Web application RPC library for Clojure/Script and Ring.
 
 ## Installation
 
@@ -13,11 +13,12 @@ Artifacts are published on Clojars.
 
 ## Usage
 
-FIXME: explanation
+Castra uses Cognitect's Transit library to serialize and deserialize EDN as JSON, giving a transparent
+feel for calling remote functions and abstracting the HTTP layer away at the same time.
 
 ## Examples
 
-The [hoplon-demos][2] repo contains demo apps using Castra.
+The [Hoplon Demos][2] repo contains demo apps using Castra.
 
 ## License
 
@@ -25,7 +26,7 @@ Copyright © 2013 FIXME
 
 Distributed under the Eclipse Public License, the same as Clojure.
 
-[1]: http://clojars.org/tailrecursion/castra
-[2]: https://github.com/tailrecursion/hoplon-demos
-[3]: http://clojars.org/tailrecursion/castra/latest-version.svg??bustcache=1.0.1
-[4]: https://raw.github.com/tailrecursion/castra/master/img/Masada.png
+[1]: http://clojars.org/castra/castra
+[2]: https://github.com/hoplon/demos
+[3]: http://clojars.org/hoplon/castra/latest-version.svg??bustcache=1.0.1
+[4]: https://raw.github.com/hoplon/castra/master/img/Masada.png

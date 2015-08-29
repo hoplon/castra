@@ -1,8 +1,8 @@
-(ns tailrecursion.castra.core-test
+(ns castra.core-test
   (:require
     [ring.adapter.jetty :as jetty]
-    [tailrecursion.castra :refer [defrpc ex]]
-    [tailrecursion.castra.middleware :refer [wrap-castra]]))
+    [castra.core :refer [defrpc ex]]
+    [castra.middleware :refer [wrap-castra]]))
 
 (defrpc test1
   [x y z]
@@ -17,7 +17,7 @@
   [req]
   {:status 404 :body "not found"})
 
-(def app (-> four-oh-four (wrap-castra 'tailrecursion.castra.core-test)))
+(def app (-> four-oh-four (wrap-castra 'castra.core-test)))
 
 (defonce server (jetty/run-jetty #'app {:join? false :port 4445}))
 

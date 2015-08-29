@@ -13,9 +13,9 @@
 (bootlaces! +version+)
 
 (task-options!
-  pom {:project      'tailrecursion/castra
+  pom {:project      'castra/castra
        :version      +version+
        :description  "HTTP remote procedure call handler for Clojure."
-       :url          "https://github.com/tailrecursion/castra"
-       :scm          {:url "https://github.com/tailrecursion/castra"}
+       :url          "https://github.com/hoplon/castra"
+       :scm          {:url "https://github.com/hoplon/castra"}
        :license      {"EPL" "http://www.eclipse.org/legal/epl-v10.html"}})
