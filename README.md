@@ -1,5 +1,5 @@
 [![Stories in Ready](https://badge.waffle.io/tailrecursion/castra.png?label=ready&title=Ready)](https://waffle.io/tailrecursion/castra)
-![masada][4]
+![masada][2]
 
 # Castra
 
@@ -9,7 +9,11 @@ Web application RPC library for Clojure/Script and Ring.
 
 Artifacts are published on Clojars.
 
-[![latest version][3]][1]
+[](dependency)
+```clojure
+[hoplon/castra "3.0.0-SNAPSHOT"] ;; latest release
+```
+[](/dependency)
 
 ## Usage
 
@@ -18,7 +22,7 @@ feel for calling remote functions and abstracting the HTTP layer away at the sam
 
 ## Examples
 
-The [Hoplon Demos][2] repo contains demo apps using Castra.
+The [Hoplon Demos][1] repo contains demo apps using Castra.
 
 ## License
 
@@ -26,7 +30,5 @@ Copyright © 2013 FIXME
 
 Distributed under the Eclipse Public License, the same as Clojure.
 
-[1]: http://clojars.org/castra/castra
-[2]: https://github.com/hoplon/demos
-[3]: http://clojars.org/hoplon/castra/latest-version.svg??bustcache=1.0.1
-[4]: https://raw.github.com/hoplon/castra/master/img/Masada.png
+[1]: https://github.com/hoplon/demos
+[2]: https://raw.github.com/hoplon/castra/master/img/Masada.png
