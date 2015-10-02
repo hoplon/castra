@@ -7,7 +7,7 @@
     [clojure.string                 :as string]
     [ring.util.request              :as q :refer [body-string]]
     [clojure.set                    :as s :refer [intersection difference]]
-    [castra.core                    :as r :refer [ex ex? dfl-ex *request* *session* *validate-only*]]
+    [castra.core                    :as r :refer [ex ex? dfl-ex *pre* *request* *session* *validate-only*]]
     [clojure.stacktrace             :as u :refer [print-cause-trace print-stack-trace]])
   (:import
     [java.util.regex Pattern]
@@ -33,7 +33,7 @@
                                 (printf "No stack trace: %s" (.getMessage x))))))))}))
 
 (defn- csrf! []
-  (when-not (get-in @*request* [:headers "x-castra-csrf"])
+  (when-not (get-in *request* [:headers "x-castra-csrf"])
     (throw (ex-info "Invalid CSRF token" {}))))
 
 (defn- do-rpc [vars [f & args]]
@@ -101,13 +101,14 @@
       (if-not (= :post (:request-method req))
         (handler req)
         (binding [*print-meta*    true
-                  *request*       (atom req)
+                  *pre*           true
+                  *request*       req
                   *session*       (atom (:session req))
                   *validate-only* (= "true" (get-in req [:headers "x-castra-validate-only"]))]
           (let [f #(do (csrf!) (do-rpc (vars) (@json->clj req (body-string %))))
-                d (try (@clj->json req (f req)) (catch Throwable e e))
-                x (when (instance? Throwable d) (@clj->json req (ex->clj d)))]
-            {:status (if x 500 200), :headers head, :body (or x d), :session @*session*}))))))
+                d (try (@clj->json req {:ok (f req)}) (catch Throwable e e))
+                x (when (instance? Throwable d) (@clj->json req {:error (ex->clj d)}))]
+            {:status 200, :headers head, :body (or x d), :session @*session*}))))))
 
 ;; AJAX Crawling Middleware ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

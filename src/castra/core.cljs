@@ -38,7 +38,7 @@
   (if (ex? ex)
     ex
     (let [{:keys [status message data stack cause]} ex]
-      (doto (ex-info message data cause)
+      (doto (ex-info message (or data {}) cause)
         (aset "serverStack" stack)
         (aset "status" status)))))
 
@@ -86,18 +86,18 @@
                      "Accept"                 "application/json"}
                     (assoc-when "X-Castra-Session" (get-session)))
         body    (if (string? expr) expr (clj->json expr))
-        ex      #(make-ex {:message "Server Error" :cause %})
-        prom'   (ajax-fn (merge opts {:headers headers :body body}))]
+        wrap-ex #(make-ex {:message "Server Error" :cause %})
+        ajax-ex #(wrap-ex (make-ex {:status %1 :message %2}))
+        prom'   (ajax-fn (merge opts {:headers headers :body body}))
+        resp    #(-> (json->clj %) (try (catch js/Error e {:error (wrap-ex e)})))]
     (-> prom'
-        (.done   (fn [{:keys [headers body]}]
-                   (set-session (get headers "X-Castra-Session"))
-                   (.resolve prom (try (json->clj body) (catch js/Error e (ex e))))))
-        (.fail   (fn [{:keys [headers body status status-text]}]
-                   (.reject prom (make-ex (if-not (get headers "X-Castra-Tunnel")
-                                            {:status status :message status-text}
-                                            (-> (json->clj body)
-                                                (try (catch js/Error e (ex e)))
-                                                (doto on-error))))))))
+        (.done (fn [{:keys [headers body]}]
+                 (set-session (get headers "X-Castra-Session"))
+                 (let [{:keys [ok error]} (resp body)]
+                   (or (and (not error) (.resolve prom ok))
+                       (.reject prom (doto (make-ex error) on-error))))))
+        (.fail (fn [{:keys [headers body status status-text]}]
+                 (.reject prom (doto (ajax-ex status status-text) on-error)))))
     (doto prom (aset "xhr" prom'))))
 
 (defn with-default-opts

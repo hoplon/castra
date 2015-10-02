@@ -8,7 +8,8 @@
 
 (ns castra.core)
 
-(def ^:dynamic *request* (atom nil))
+(def ^:dynamic *pre* nil)
+(def ^:dynamic *request* nil)
 (def ^:dynamic *session* (atom nil))
 (def ^:dynamic *validate-only* nil)
 
@@ -24,14 +25,14 @@
           m' (not-empty (dissoc m :rpc/pre :rpc/query))]
       `(~bind
          ~@(when m' [m'])
-         (let [req# @*request*]
-           (reset! *request* nil)
-           (when req#
-             ~@(when pre [`(assert ~pre)]))
-           (when (not *validate-only*)
-             (if-not req#
-               (do ~@body)
-               (do ~@body ~@(when query [query])))))))))
+         (let [pre# *pre*]
+           (binding [*pre* nil]
+             (when pre#
+               ~@(when pre [`(assert ~pre)]))
+             (when (not *validate-only*)
+               (if-not pre#
+                 (do ~@body)
+                 (do ~@body ~@(when query [query]))))))))))
 
 (defmacro defrpc [name & fdecl]
   (let [[_ name [_ & arities]]
