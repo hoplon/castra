@@ -85,8 +85,7 @@
 (defn wrap-castra [handler & [opts & more :as namespaces]]
   (let [opts (when (map? opts) opts)
         nses (if opts more namespaces)
-        head {"X-Castra-Tunnel" "transit"
-              "Content-type"    "application/json"}
+        head {"X-Castra-Tunnel" "transit"}
         seq* #(or (try (seq %) (catch Throwable e)) [%])
         vars (fn [] (->> nses (map seq*) (mapcat #(apply select-vars %)) set))]
     (fn [req]
