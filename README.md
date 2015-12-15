@@ -53,15 +53,16 @@ The response will be sent using Transit, so it's OK for the body to be
 a Clojure data structure. That's part of how Castra provides a
 seamless frontend/backend programming experience.
 
-You need to use middleware to get a Castra-friendly expression into
-the ring request's body. The `wrap-transit-body` middleware in
-[ring-transit](https://github.com/jalehman/ring-transit) will do this
-for you.
+By default, Castra's front-end functions use Transit so that, on the
+server side, the request's body evaluates to a Castra-friendly
+expression.
 
-If you need to handle file uploads and thus need to send a
-`multipart/form-data` request to your Castra server, you can use
-ring's `wrap-multipart-params` and write a custom middleware to put
-the result in the ring request body as a Castra-friendly expression.
+If you're not sending requests with Transit, however, then you need to
+use middleware to get a Castra-friendly expression into the ring
+request's body. For example, if you're uploading a file as
+`multipart/form-data`, you can use ring's `wrap-multipart-params` and
+write a custom middleware to put the result in the ring request body
+as a Castra-friendly expression.
 
 Your final middleware might look something like:
 
@@ -69,7 +70,7 @@ Your final middleware might look something like:
 (def APP
   (-> (wrap-castra 'geir-backend.core)
       (wrap-castra-session "secret-key")
-      (wrap-transit-body)
+      (wrap-transit-response {:encoding :json})
       (wrap-handle-file-upload) ; this is your custom code
       (wrap-keyword-params)
       (wrap-multipart-params)))

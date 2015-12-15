@@ -51,6 +51,15 @@
         exclude   (if (seq exclude) (to-vars exclude) #{})]
     (-> vars (intersection only) (difference exclude))))
 
+(def json->clj
+  (atom #(-> (ByteArrayInputStream. (.getBytes %2)) (t/reader :json) t/read)))
+
+(defn expression
+  [{:keys [body] :as req}]
+  (if (coll? body)
+    body
+    (@json->clj req (body-string req))))
+
 (def default-timeout (* 1000 60 60 24))
 
 (defn wrap-castra-session [handler ^String key & [{:keys [timeout]}]]
@@ -96,7 +105,7 @@
                   *request*       req
                   *session*       (atom (:session req))
                   *validate-only* (= "true" (get-in req [:headers "x-castra-validate-only"]))]
-          (let [f #(do (csrf!) (do-rpc (vars) (:body req)))
+          (let [f #(do (csrf!) (do-rpc (vars) (expression req)))
                 d (try {:ok (f)} (catch Throwable e e))
                 x (when (instance? Throwable d) {:error (ex->clj d)})]
             {:status 200, :headers head, :body (or x d), :session @*session*}))))))
