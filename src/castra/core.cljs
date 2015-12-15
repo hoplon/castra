@@ -51,7 +51,7 @@
   [{:keys [url timeout credentials headers body]}]
   (let [prom (.Deferred js/jQuery)
         opts (-> {"async"       true
-                  "contentType" "application/json"
+                  "contentType" "application/transit+json"
                   "data"        body
                   "dataType"    "text"
                   "headers"     headers

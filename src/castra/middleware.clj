@@ -97,7 +97,7 @@
                   *session*       (atom (:session req))
                   *validate-only* (= "true" (get-in req [:headers "x-castra-validate-only"]))]
           (let [f #(do (csrf!) (do-rpc (vars) (:body req)))
-                d (try {:ok (f req)} (catch Throwable e e))
+                d (try {:ok (f)} (catch Throwable e e))
                 x (when (instance? Throwable d) {:error (ex->clj d)})]
             {:status 200, :headers head, :body (or x d), :session @*session*}))))))
 
