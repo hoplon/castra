@@ -83,7 +83,7 @@
         headers (-> {"X-Castra-Csrf"          "true"
                      "X-Castra-Tunnel"        "transit"
                      "X-Castra-Validate-Only" (str (boolean *validate-only*))
-                     "Accept"                 "application/json"}
+                     "Accept"                 "application/transit+json"}
                     (assoc-when "X-Castra-Session" (get-session)))
         body    (if (string? expr) expr (clj->json expr))
         wrap-ex #(make-ex {:message "Server Error" :cause %})

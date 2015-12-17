@@ -51,14 +51,31 @@
         exclude   (if (seq exclude) (to-vars exclude) #{})]
     (-> vars (intersection only) (difference exclude))))
 
+(def clj->json
+  (atom #(let [out (ByteArrayOutputStream. 4096)]
+           (t/write (t/writer out :json) %2)
+           (.toString out))))
+
 (def json->clj
   (atom #(-> (ByteArrayInputStream. (.getBytes %2)) (t/reader :json) t/read)))
 
+(defn clj-body
+  [{:keys [body-params body]}]
+  (cond (coll? body-params) body-params
+        (coll? body)        body
+        :else               nil))
+
 (defn expression
-  [{:keys [body] :as req}]
-  (if (coll? body)
-    body
-    (@json->clj req (body-string req))))
+  [req]
+  (or (clj-body req) (@json->clj req (body-string req))))
+
+(defn response
+  [req data]
+  (if (clj-body req) data (@clj->json req data)))
+
+(defn headers
+  [{:keys [body] :as req} head extra]
+  (merge head (when-not (coll? body) extra)))
 
 (def default-timeout (* 1000 60 60 24))
 
@@ -98,6 +115,7 @@
         seq* #(or (try (seq %) (catch Throwable e)) [%])
         vars (fn [] (->> nses (map seq*) (mapcat #(apply select-vars %)) set))]
     (fn [req]
+      (prn :body (clj-body req))
       (if-not (= :post (:request-method req))
         (handler req)
         (binding [*print-meta*    true
@@ -105,10 +123,12 @@
                   *request*       req
                   *session*       (atom (:session req))
                   *validate-only* (= "true" (get-in req [:headers "x-castra-validate-only"]))]
-          (let [f #(do (csrf!) (do-rpc (vars) (expression req)))
-                d (try {:ok (f)} (catch Throwable e e))
-                x (when (instance? Throwable d) {:error (ex->clj d)})]
-            {:status 200, :headers head, :body (or x d), :session @*session*}))))))
+          (let [h (headers req head {"Content-Type" "application/json"})
+                f #(do (csrf!) (do-rpc (vars) (expression req)))
+                d (try (response req {:ok (f)})
+                       (catch Throwable e
+                         (response req {:error (ex->clj e)})))]
+            {:status 200, :headers h, :body d, :session @*session*}))))))
 
 ;; AJAX Crawling Middleware ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
