@@ -51,13 +51,14 @@
         exclude   (if (seq exclude) (to-vars exclude) #{})]
     (-> vars (intersection only) (difference exclude))))
 
-(def clj->json
-  (atom #(let [out (ByteArrayOutputStream. 4096)]
-           (t/write (t/writer out :json) %2)
-           (.toString out))))
-
 (def json->clj
   (atom #(-> (ByteArrayInputStream. (.getBytes %2)) (t/reader :json) t/read)))
+
+(defn expression
+  [{:keys [body] :as req}]
+  (if (coll? body)
+    body
+    (@json->clj req (body-string req))))
 
 (def default-timeout (* 1000 60 60 24))
 
@@ -93,8 +94,7 @@
 (defn wrap-castra [handler & [opts & more :as namespaces]]
   (let [opts (when (map? opts) opts)
         nses (if opts more namespaces)
-        head {"X-Castra-Tunnel" "transit"
-              "Content-type"    "application/json"}
+        head {"X-Castra-Tunnel" "transit"}
         seq* #(or (try (seq %) (catch Throwable e)) [%])
         vars (fn [] (->> nses (map seq*) (mapcat #(apply select-vars %)) set))]
     (fn [req]
@@ -105,9 +105,9 @@
                   *request*       req
                   *session*       (atom (:session req))
                   *validate-only* (= "true" (get-in req [:headers "x-castra-validate-only"]))]
-          (let [f #(do (csrf!) (do-rpc (vars) (@json->clj req (body-string %))))
-                d (try (@clj->json req {:ok (f req)}) (catch Throwable e e))
-                x (when (instance? Throwable d) (@clj->json req {:error (ex->clj d)}))]
+          (let [f #(do (csrf!) (do-rpc (vars) (expression req)))
+                d (try {:ok (f)} (catch Throwable e e))
+                x (when (instance? Throwable d) {:error (ex->clj d)})]
             {:status 200, :headers head, :body (or x d), :session @*session*}))))))
 
 ;; AJAX Crawling Middleware ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
