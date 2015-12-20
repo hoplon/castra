@@ -1,3 +1,3 @@
 # Castra
 
-![architecture overview](../img/arch-fill.png)
+![architecture overview](../img/arch-full.png)
