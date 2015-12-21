@@ -59,19 +59,13 @@
 (def json->clj
   (atom #(-> (ByteArrayInputStream. (.getBytes %2)) (t/reader :json) t/read)))
 
-(defn clj-body
-  [{:keys [body-params body]}]
-  (cond (coll? body-params) body-params
-        (coll? body)        body
-        :else               nil))
-
 (defn expression
-  [req]
-  (or (clj-body req) (@json->clj req (body-string req))))
+  [body-keys req]
+  (or (some req body-keys) (@json->clj req (body-string req))))
 
 (defn response
-  [req data]
-  (if (clj-body req) data (@clj->json req data)))
+  [body-keys req data]
+  (if (some req body-keys) data (@clj->json req data)))
 
 (defn headers
   [{:keys [body] :as req} head extra]
@@ -109,13 +103,12 @@
                 (assoc-in [:headers "X-Castra-Session"] data'))))))))
 
 (defn wrap-castra [handler & [opts & more :as namespaces]]
-  (let [opts (when (map? opts) opts)
+  (let [{:keys [body-keys] :as opts} (when (map? opts) opts)
         nses (if opts more namespaces)
         head {"X-Castra-Tunnel" "transit"}
         seq* #(or (try (seq %) (catch Throwable e)) [%])
         vars (fn [] (->> nses (map seq*) (mapcat #(apply select-vars %)) set))]
     (fn [req]
-      (prn :body (clj-body req))
       (if-not (= :post (:request-method req))
         (handler req)
         (binding [*print-meta*    true
@@ -124,8 +117,8 @@
                   *session*       (atom (:session req))
                   *validate-only* (= "true" (get-in req [:headers "x-castra-validate-only"]))]
           (let [h (headers req head {"Content-Type" "application/json"})
-                f #(do (csrf!) (do-rpc (vars) (expression req)))
-                d (try (response req {:ok (f)})
+                f #(do (csrf!) (do-rpc (vars) (expression body-keys req)))
+                d (try (response body-keys req {:ok (f)})
                        (catch Throwable e
                          (response req {:error (ex->clj e)})))]
             {:status 200, :headers h, :body d, :session @*session*}))))))
