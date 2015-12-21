@@ -48,7 +48,7 @@ something like:
 * The Castra middleware deserializes the body to obtain Clojure forms.
 * It then dispatches the expression `(my.app/update-record 123 {:x 1 :y 2})`
   by resolving and attempting to call the function `my.app/update-record`.
-  (This function should be created with `castra.core/defrpc`.)
+  (This function should be created with `castra.core/defrpc`, explained below.)
 * The Castra middleware then returns a ring response map with the serialized
   result in the `:body` and a 200 status.
 
@@ -56,7 +56,28 @@ You can think of the response as if it were this:
 
 ```clojure
 {:status 200
- :body (pr-str (update-record 123 {:x 1 :y 2}))}
+ :body (pr-str (my.app/update-record 123 {:x 1 :y 2}))}
+```
+
+Obviously, we don't want the client to be able to evaluate arbitrary
+expressions on the server (we already have [nREPL][nrepl] for that). We
+want to be able to mark certain functions as part of our application's
+RPC interface. This is accomplished with `castra.core/defrpc`:
+
+```clojure
+(ns my.app
+  (:require
+    [castra.core :as c]
+    [some.database :as db]))
+
+(c/defrpc get-record
+  [id]
+  (db/query "SELECT * FROM record WHERE id = ?" id))
+
+(c/defrpc update-record
+  [id {:keys [x y]}]
+  (db/execute "UPDATE IN record SET x = ?, y = ? WHERE id = ?" x y id)
+  (get-record id))
 ```
 
 ## Client Usage
@@ -80,3 +101,4 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 [1]: https://github.com/hoplon/demos
 [2]: https://raw.github.com/hoplon/castra/master/img/Masada.png
+[nrepl]: https://github.com/clojure/tools.nrepl
