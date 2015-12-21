@@ -33,7 +33,14 @@ difficult distributed systems problem. Castra does not attempt this.
 Instead, Castra's RPC model embraces the asynchronous nature of client
 server communication.
 
-## Server Usage
+## Overview
+
+Castra spans the gap between server and client. This makes documentation
+a bit more difficult. This section will jump back and forth between client
+and server code &mdash; it should be understood that the server code is
+Clojure and client is ClojureScript.
+
+### Server
 
 Most of the magic happens in Castra's `castra.middleware/wrap-castra`
 ring middleware. This middleware looks for an expression under the
@@ -72,7 +79,7 @@ RPC interface. This is accomplished with `castra.core/defrpc`:
 
 (c/defrpc get-record
   [id]
-  (db/query "SELECT * FROM record WHERE id = ?" id))
+  (first (db/query "SELECT * FROM record WHERE id = ?" id)))
 
 (c/defrpc update-record
   [id {:keys [x y]}]
@@ -80,7 +87,32 @@ RPC interface. This is accomplished with `castra.core/defrpc`:
   (get-record id))
 ```
 
-## Client Usage
+### Client
+
+Castra provides a ClojureScript library for creating the RPC stub functions
+the client will call. These are constructed by the `castra.core/mkremote`
+function.
+
+```clojure
+(ns my.app.client
+  (:require
+    [castra.core :as c]
+    [javelin.core :as j :include-macros true]))
+
+(j/defc record  nil)
+(j/defc error   nil)
+(j/defc loading nil)
+
+(def get-record    (c/mkremote 'my.app/get-record    record error loading))
+(def update-record (c/mkremote 'my.app/update-record record error loading))
+```
+
+The `mkremote` function takes four arguments:
+
+1. The fully qualified symbol associated with the `defrpc` on the server.
+2. The "state" cell, where the result will go if the operation succeeded.
+3. The "error" cell, where the exception will go if the operation failed.
+4. The "loading" cell, which will contain a vector of all in-flight RPC requests.
 
 TODO
 
