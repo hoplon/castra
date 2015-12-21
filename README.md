@@ -27,6 +27,12 @@ server."
 
 Castra's front-end and back-end libraries implement this RPC pattern.
 
+RPC does come with baggage, though. Implementing an RPC framework that
+provides a seamless and transparent remote execution model is a very
+difficult distributed systems problem. Castra does not attempt this.
+Instead, Castra's RPC model embraces the asynchronous nature of client
+server communication.
+
 ## Server Usage
 
 Most of the magic happens in Castra's `castra.middleware/wrap-castra`
@@ -35,45 +41,22 @@ ring middleware. This middleware looks for an expression under the
 something like:
 
 ```clojure
-{:body ['update-record 123 {:x 1 :y 2}]}
+{:request-method :post
+ :body "(my.app/update-record 123 {:x 1 :y 2})"}
 ```
 
-It then dispatches the expression `['update-record 123 {:x 1 :y 2}]`
-by attempting to call the function `update-record`. `update-record`
-should be created with `castra.core/defrpc`, and returns a ring
-response map with the result of `update-record` in the body and a 200
-status. You can think of the response as if it were this:
+* The Castra middleware deserializes the body to obtain Clojure forms.
+* It then dispatches the expression `(my.app/update-record 123 {:x 1 :y 2})`
+  by resolving and attempting to call the function `my.app/update-record`.
+  (This function should be created with `castra.core/defrpc`.)
+* The Castra middleware then returns a ring response map with the serialized
+  result in the `:body` and a 200 status.
+
+You can think of the response as if it were this:
 
 ```clojure
 {:status 200
- :body (update-record 123 {:x 1 :y 2})}
-```
-
-The response will be sent using Transit, so it's OK for the body to be
-a Clojure data structure. That's part of how Castra provides a
-seamless frontend/backend programming experience.
-
-By default, Castra's front-end functions use Transit so that, on the
-server side, the request's body evaluates to a Castra-friendly
-expression.
-
-If you're not sending requests with Transit, however, then you need to
-use middleware to get a Castra-friendly expression into the ring
-request's body. For example, if you're uploading a file as
-`multipart/form-data`, you can use ring's `wrap-multipart-params` and
-write a custom middleware to put the result in the ring request body
-as a Castra-friendly expression.
-
-Your final middleware might look something like:
-
-```clojure
-(def APP
-  (-> (wrap-castra 'geir-backend.core)
-      (wrap-castra-session "secret-key")
-      (wrap-transit-response {:encoding :json})
-      (wrap-handle-file-upload) ; this is your custom code
-      (wrap-keyword-params)
-      (wrap-multipart-params)))
+ :body (pr-str (update-record 123 {:x 1 :y 2}))}
 ```
 
 ## Client Usage
