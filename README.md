@@ -11,7 +11,7 @@ Artifacts are published on Clojars.
 
 [](dependency)
 ```clojure
-[hoplon/castra "3.0.0-alpha1"] ;; latest release
+[hoplon/castra "3.0.0-alpha2"] ;; latest release
 ```
 [](/dependency)
 
