@@ -131,10 +131,23 @@ shows us the contents of a record.
   (:require
     [my.app.client :as c]))
 
+(defc= loading?      (seq c/loading))
+(defc= error-message (some-> c/error .-message))
+
 (html
   (head)
   (body
+    ;; notify the user that something is being loaded
+    (p :toggle loading? "loading...")
+
+    ;; notify the user when an RPC operation fails
+    (p :toggle error-message
+      (text "Error: ~{error-message}"))
+
+    ;; display the current record
     (p (text "Record: ~{c/record}"))
+
+    ;; enter a record id and click submit
     (let [id (cell nil)]
       (form :submit #(c/get-record @id)
         (p (label "Record ID: ")
