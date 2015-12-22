@@ -187,8 +187,8 @@ There are actually two dataflow loops in the program:
 1. The user types in the `input` element.
 2. The `keyup` DOM event fires, triggering a **state transition** (callback).
 3. The callback updates an anonymous input cell lexically bound to `id`.
-4. The `id` cell notifies watchers when it updates, which updates the `value`
-   **property** of the `input` element.
+4. The `id` cell is bound to the `value` **property** of the `input` element,
+   so it is automatically updated when `id` changes.
 5. The user sees the new value in the `input` element.
 
 ## Examples
