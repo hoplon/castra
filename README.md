@@ -96,7 +96,7 @@ function.
 ```clojure
 (ns my.app.client
   (:require
-    [castra.core :as c]
+    [castra.core :refer c]
     [javelin.core :as j :include-macros true]))
 
 (j/defc record  nil)
@@ -107,12 +107,13 @@ function.
 (def update-record (c/mkremote 'my.app/update-record record error loading))
 ```
 
-The `mkremote` function takes four arguments:
+The `mkremote` function takes four arguments, three of which are
+[Javelin][javelin] cells:
 
-1. The fully qualified symbol associated with the `defrpc` on the server.
-2. The "state" cell, where the result will go if the operation succeeded.
-3. The "error" cell, where the exception will go if the operation failed.
-4. The "loading" cell, which will contain a vector of all in-flight RPC requests.
+1. The **fully qualified symbol** associated with the `defrpc` on the server.
+2. The **state cell**, where the result will go if the operation succeeded.
+3. The **error cell**, where the exception will go if the operation failed.
+4. The **loading cell**, which will contain a vector of all in-flight RPC requests.
 
 TODO
 
@@ -134,3 +135,4 @@ Distributed under the Eclipse Public License, the same as Clojure.
 [1]: https://github.com/hoplon/demos
 [2]: https://raw.github.com/hoplon/castra/master/img/Masada.png
 [nrepl]: https://github.com/clojure/tools.nrepl
+[javelin]: https://github.com/hoplon/javelin
