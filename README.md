@@ -176,6 +176,8 @@ There are a few things to notice about this application:
   to know or care** which places will respond to the change (eg. the `p`
   displaying the current record), and vice versa.
 
+### Dataflow
+
 The diagram to the right illustrates the flow of data through the application.
 There are actually two dataflow loops in the program:
 
