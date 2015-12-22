@@ -128,6 +128,8 @@ shows us the contents of a record.
 * The interface displays an indication when remote operations are in progress.
 * The interface displays error messages when remote operations fail.
 
+Here is a simple [Hoplon][hoplon] page that satisfies these requirements:
+
 ```clojure
 (page "index.html"
   (:require
@@ -197,4 +199,5 @@ Distributed under the Eclipse Public License, the same as Clojure.
 [1]: https://github.com/hoplon/demos
 [2]: https://raw.github.com/hoplon/castra/master/img/Masada.png
 [nrepl]: https://github.com/clojure/tools.nrepl
+[hoplon]: https://github.com/hoplon/hoplon
 [javelin]: https://github.com/hoplon/javelin
