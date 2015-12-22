@@ -206,8 +206,8 @@ There are actually two dataflow loops in the program:
 
 Notice how similar the two cases are. The main difference is at step 3. In
 the local loop the callback directly updates the `id` cell with the
-synchronous `reset!` function. In the remote loop the `c/record` cell is
-updated asynchronously via Castra.
+synchronously with `reset!`. In the remote loop the `c/record` cell is
+updated asynchronously with Castra.
 
 ## Examples
 
