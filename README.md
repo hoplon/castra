@@ -185,8 +185,7 @@ There are actually two dataflow loops in the program:
 #### Local Loop
 
 1. The user types in the input box.
-2. The `keyup` DOM event fires, triggering a **local state transition** (more
-   crudely called a _callback_).
+2. The `keyup` DOM event fires, triggering a **state transition** (callback).
 3. The callback updates an anonymous input cell lexically bound to `id`.
 4. 
 
