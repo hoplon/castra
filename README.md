@@ -162,7 +162,7 @@ Here is a simple [Hoplon][hoplon] page that satisfies these requirements:
           (p (button :type "submit" "submit")))))))
 ```
 
-<img src="img/arch-full.png" width="400" align="right">
+<img src="img/arch-full.png" width="300" align="right">
 
 There are a few things to notice about this application:
 
