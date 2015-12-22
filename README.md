@@ -186,7 +186,7 @@ There are actually two dataflow loops in the program:
 
 1. The user types in the input element.
 2. The `keyup` DOM event fires, triggering a **state transition** (callback).
-3. The callback updates an anonymous input cell lexically bound to `id`.
+3. The callback calls `reset!` on the `id` input cell.
 4. The `value` property of the input element is bound to the `id` cell,
    so it is automatically updated when `id` changes.
 5. The user sees the new value in the input element.
@@ -201,6 +201,8 @@ There are actually two dataflow loops in the program:
 5. The `textContent` property of the text node displaying the current record
    is bound to a formula cell that updates when `c/record` changes.
 6. The user sees the new record's value in the page.
+
+Notice how similar the two cases are. The main difference 
 
 ## Examples
 
