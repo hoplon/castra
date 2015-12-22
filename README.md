@@ -96,7 +96,7 @@ function.
 ```clojure
 (ns my.app.client
   (:require
-    [castra.core :refer c]
+    [castra.core :as c]
     [javelin.core :as j :include-macros true]))
 
 (j/defc record  nil)
