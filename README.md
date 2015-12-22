@@ -162,15 +162,16 @@ shows us the contents of a record.
 
 There are a few things to notice about this application:
 
-* There are no explicit callbacks; the program is declarative.
-* Commands to change state do not return a value; the value is updated in a
-  Javelin cell asynchronously when the command completes successfully.
-* Dataflow is unidirectional (i.e. getting and changing state are via
-  separate constructs &mdash; getting via formula cells, and setting via
-  RPC functions).
-* The place that commands the change (eg. the `form` above) does not need to
-  know or care which places will respond to the change (eg. the `p` displaying
-  the current record), and vice versa.
+* There are **no explicit callbacks** &mdash; the program is declarative.
+* Commands to change state **do not return a value** &mdash; the value is
+  updated in a Javelin cell asynchronously when the command completes
+  successfully.
+* Dataflow is **unidirectional** (i.e. getting and changing state are via
+  separate constructs) &mdash; getting via formula cells, and setting via
+  RPC functions.
+* The place that commands the change (eg. the `form` above) **does not need
+  to know or care** which places will respond to the change (eg. the `p`
+  displaying the current record), and vice versa.
 
 <img src="img/arch-full.png" width="400" align="right">
 
