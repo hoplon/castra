@@ -154,7 +154,7 @@ shows us the contents of a record.
       (form :submit #(c/get-record @id)
         (fieldset
           (p (label "Record ID: ")
-            (input :value id :keyup #(reset! id @%)))
+             (input :value id :keyup #(reset! id @%)))
           (p (button :type "submit" "submit")))))))
 ```
 
