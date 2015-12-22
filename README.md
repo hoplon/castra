@@ -162,6 +162,8 @@ Here is a simple [Hoplon][hoplon] page that satisfies these requirements:
           (p (button :type "submit" "submit")))))))
 ```
 
+<img src="img/arch-full.png" width="400" align="right">
+
 There are a few things to notice about this application:
 
 * There are **no explicit callbacks** &mdash; the program is declarative.
@@ -174,8 +176,6 @@ There are a few things to notice about this application:
 * The place that commands the change (eg. the `form` above) **does not need
   to know or care** which places will respond to the change (eg. the `p`
   displaying the current record), and vice versa.
-
-<img src="img/arch-full.png" width="400" align="right">
 
 This is text.
 
