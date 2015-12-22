@@ -159,6 +159,10 @@ shows us the contents of a record.
           (p (button :type "submit" "submit")))))))
 ```
 
+<img src="img/arch-full.png" width="400" align="right">
+
+This is text.
+
 TODO
 
 ## Examples
