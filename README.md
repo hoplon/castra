@@ -179,8 +179,8 @@ There are a few things to notice about this application:
 The diagram to the right illustrates the flow of data through the application.
 There are actually two dataflow loops in the program:
 
-* The local loop for editing the record id form value, and
-* the remote loop which sends commands to the server.
+* A **local loop** for editing the record id form value, and
+* a **remote loop** which sends commands to the server.
 
 #### Local Loop
 
