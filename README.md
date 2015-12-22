@@ -5,10 +5,6 @@
 
 Web application RPC library for Clojure/Script and Ring.
 
-## Installation
-
-Artifacts are published on Clojars.
-
 [](dependency)
 ```clojure
 [hoplon/castra "3.0.0-alpha2"] ;; latest release
