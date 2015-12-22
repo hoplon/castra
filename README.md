@@ -162,9 +162,9 @@ Here is a simple [Hoplon][hoplon] page that satisfies these requirements:
           (p (button :type "submit" "submit")))))))
 ```
 
-There are a few things to notice about this application:
-
 <img src="img/arch-full.png" width="300" align="right">
+
+There are a few things to notice about this application:
 
 * Commands to change state **do not return a value** &mdash; the value is
   updated in a Javelin cell asynchronously when the command completes
