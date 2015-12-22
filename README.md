@@ -162,8 +162,6 @@ Here is a simple [Hoplon][hoplon] page that satisfies these requirements:
           (p (button :type "submit" "submit")))))))
 ```
 
-<img src="img/arch-full.png" width="300" align="right">
-
 There are a few things to notice about this application:
 
 * Commands to change state **do not return a value** &mdash; the value is
@@ -177,6 +175,8 @@ There are a few things to notice about this application:
   displaying the current record), and vice versa.
 
 ### Dataflow
+
+<img src="img/arch-full.png" width="300" align="right">
 
 The diagram to the right illustrates the flow of data through the application.
 There are actually two dataflow loops in the program:
