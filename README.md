@@ -150,9 +150,10 @@ shows us the contents of a record.
     ;; enter a record id and click submit
     (let [id (cell nil)]
       (form :submit #(c/get-record @id)
-        (p (label "Record ID: ")
-           (input :value id :keyup #(reset! id @%)))
-        (p (button :type "submit" "submit"))))))
+        (fieldset
+          (p (label "Record ID: ")
+            (input :value id :keyup #(reset! id @%)))
+          (p (button :type "submit" "submit")))))))
 ```
 
 TODO
