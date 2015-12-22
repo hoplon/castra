@@ -34,7 +34,7 @@ Instead, Castra's RPC model embraces the asynchronous nature of client
 server communication.
 
 > Applicable buzzwords, if you're not into the whole brevity thing, are
-> _unidirectional dataflow_ and the _CQRS pattern_.
+> **_unidirectional dataflow_** and the **_CQRS_** pattern.
 
 ## Overview
 
