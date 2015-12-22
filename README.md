@@ -121,9 +121,10 @@ which can be called like any other ClojureScript function.
 #### Hoplon Example:
 
 Using the server and client code above, we can make a little webapp that
-shows us the contents of a record. The user interface will display the
-current record and allow the user to enter a record id in a text input and
-click submit to view a different record.
+shows us the contents of a record.
+
+* The user interface will display the current record at the top of the page.
+* The user may enter an id into a text input to view a different record.
 
 ```clojure
 (page "index.html"
@@ -135,14 +136,10 @@ click submit to view a different record.
   (body
     (p (text "Record: ~{c/record}"))
     (let [id (cell nil)]
-      (form
-        :submit #(c/get-record @id)
-        (p
-          (label
-            "Record ID: "
-            (input :value id :keyup #(reset! id @%))))
-        (p
-          (button :type "submit" "submit"))))))
+      (form :submit #(c/get-record @id)
+        (p (label "Record ID: ")
+           (input :value id :keyup #(reset! id @%)))
+        (p (button :type "submit" "submit"))))))
 ```
 
 TODO
