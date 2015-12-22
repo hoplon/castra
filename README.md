@@ -115,6 +115,36 @@ The `mkremote` function takes four arguments, three of which are
 3. The **error cell**, where the exception will go if the operation failed.
 4. The **loading cell**, which will contain a vector of all in-flight RPC requests.
 
+This defines the `get-record` and `update-record` functions in the client,
+which can be called like any other ClojureScript function.
+
+#### Hoplon Example:
+
+Using the server and client code above, we can make a little webapp that
+shows us the contents of a record. The user interface will display the
+current record and allow the user to enter a record id in a text input and
+click submit to view a different record.
+
+```clojure
+(page "index.html"
+  (:require
+    [my.app.client :as c]))
+
+(html
+  (head)
+  (body
+    (p (text "Record: ~{c/record}"))
+    (let [id (cell nil)]
+      (form
+        :submit #(c/get-record @id)
+        (p
+          (label
+            "Record ID: "
+            (input :value id :keyup #(reset! id @%))))
+        (p
+          (button :type "submit" "submit"))))))
+```
+
 TODO
 
 ## Examples
