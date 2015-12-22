@@ -152,8 +152,7 @@ Here is a simple [Hoplon][hoplon] page that satisfies these requirements:
     (p :toggle error-message                                ; show when an operation fails
       (text "Error: ~{error-message}"))
 
-    ;; display the current record
-    (p (text "Record: ~{c/record}"))
+    (p (text "Record: ~{c/record}"))                        ; display the current record
 
     (let [id (cell nil)]
       (form :submit #(c/get-record @id)                     ; edit and submit form to load record
