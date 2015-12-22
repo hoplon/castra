@@ -166,7 +166,6 @@ Here is a simple [Hoplon][hoplon] page that satisfies these requirements:
 
 There are a few things to notice about this application:
 
-* There are **no explicit callbacks** &mdash; the program is declarative.
 * Commands to change state **do not return a value** &mdash; the value is
   updated in a Javelin cell asynchronously when the command completes
   successfully.
@@ -177,9 +176,19 @@ There are a few things to notice about this application:
   to know or care** which places will respond to the change (eg. the `p`
   displaying the current record), and vice versa.
 
-This is text.
+The diagram to the right illustrates the flow of data through the application.
+There are actually two dataflow loops in the program:
 
-TODO
+* The local loop for editing the record id form value, and
+* the remote loop which sends commands to the server.
+
+#### Local Loop
+
+1. The user types in the input box.
+2. The `keyup` DOM event fires, triggering a **local state transition** (more
+   crudely called a _callback_).
+3. The callback updates an anonymous input cell lexically bound to `id`.
+4. 
 
 ## Examples
 
