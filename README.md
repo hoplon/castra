@@ -33,6 +33,9 @@ difficult distributed systems problem. Castra does not attempt this.
 Instead, Castra's RPC model embraces the asynchronous nature of client
 server communication.
 
+> Applicable buzzwords, if you're not into the whole brevity thing, are
+> _unidirectional dataflow_ and the _CQRS pattern_.
+
 ## Overview
 
 Castra spans the gap between server and client. This makes documentation
