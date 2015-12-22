@@ -131,7 +131,7 @@ shows us the contents of a record.
   (:require
     [my.app.client :as c]))
 
-(defc= loading?      (seq c/loading))
+(defc= loading?      (some-> c/loading seq count))
 (defc= error-message (some-> c/error .-message))
 
 ;; get record 1 when page first loads
@@ -140,17 +140,16 @@ shows us the contents of a record.
 (html
   (head)
   (body
-    ;; notify the user that something is being loaded
-    (p :toggle loading? "loading...")
+    ;; notify the user when things are being processed
+    (p :toggle loading? (text "Processing ~{loading?} requests..."))
 
-    ;; notify the user when an RPC operation fails
-    (p :toggle error-message
-      (text "Error: ~{error-message}"))
+    ;; notify the user when an operation fails
+    (p :toggle error-message (text "Error: ~{error-message}"))
 
     ;; display the current record
     (p (text "Record: ~{c/record}"))
 
-    ;; enter a record id and click submit
+    ;; edit and submit the form to see a different record
     (let [id (cell nil)]
       (form :submit #(c/get-record @id)
         (fieldset
