@@ -196,8 +196,8 @@ There are actually two dataflow loops in the program:
 1. The user submits the form.
 2. The `submit` DOM event fires, triggering the callback.
 3. The callback performs an RPC command, `get-record`.
-4. When the RPC command completes the `c/record` cell is updated with the new
-   current record.
+4. When the RPC command completes the `c/record` cell is automatically updated
+   with the new current record.
 5. The `textContent` property of the text node displaying the current record
    is bound to a formula cell that updates when `c/record` changes.
 6. The user sees the new record's value in the page.
