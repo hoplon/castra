@@ -198,9 +198,9 @@ There are actually two dataflow loops in the program:
 3. The callback performs an RPC command, `get-record`.
 4. When the RPC command completes the `c/record` cell is updated with the new
    current record.
-5. The text node displaying the current record contains a formula cell that
-   updates when `c/record` changes, thereby updating the text node.
-6. The user sees the new record value in the page.
+5. The `textContent` property of the text node displaying the current record
+   is bound to a formula cell that updates when `c/record` changes.
+6. The user sees the new record's value in the page.
 
 ## Examples
 
