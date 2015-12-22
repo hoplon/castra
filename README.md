@@ -138,8 +138,8 @@ Here is a simple [Hoplon][hoplon] page that satisfies these requirements:
   (:require
     [my.app.client :as c]))
 
-(defc= loading?      (some-> c/loading seq count))
-(defc= error-message (some-> c/error .-message))
+(defc= loading?      (some-> c/loading seq count)) ; contains count of in-flight commands
+(defc= error-message (some-> c/error .-message))   ; contains the last command's error message
 
 ;; get record 1 when page first loads
 (c/get-record 1)
