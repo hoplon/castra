@@ -134,6 +134,9 @@ shows us the contents of a record.
 (defc= loading?      (seq c/loading))
 (defc= error-message (some-> c/error .-message))
 
+;; get record 1 when page first loads
+(c/get-record 1)
+
 (html
   (head)
   (body
