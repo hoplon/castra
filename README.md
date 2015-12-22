@@ -152,10 +152,9 @@ Here is a simple [Hoplon][hoplon] page that satisfies these requirements:
 
     (let [id (cell nil)]
       (form :submit #(c/get-record @id)                   ; edit and submit form to load record
-        (fieldset
-          (p (label "Record ID: ")
-             (input :value id :keyup #(reset! id @%)))
-          (p (button :type "submit" "submit")))))))
+        (p (label "Record ID: ")
+            (input :value id :keyup #(reset! id @%)))
+        (p (button :type "submit" "submit"))))))
 ```
 
 There are a few things to notice about this application:
