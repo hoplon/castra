@@ -75,7 +75,7 @@ You can think of the response as if it were this:
  :body (pr-str (my.app/update-record 123 {:x 1 :y 2}))}
 ```
 
-<img src="img/parts-api.png" width="300" align="right">
+<img src="img/parts-api.png" width="100" align="right">
 
 Obviously, we don't want the client to be able to evaluate arbitrary
 expressions on the server (we already have [nREPL][nrepl] for that). We
