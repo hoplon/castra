@@ -86,7 +86,8 @@ You can think of the response as if it were this:
 Obviously, we don't want the client to be able to evaluate arbitrary
 expressions on the server (we already have [nREPL][nrepl] for that). We
 want to be able to mark certain functions as part of our application's
-RPC interface. This is accomplished with `castra.core/defrpc`:
+RPC interface. This is accomplished by adding a namespace containing
+functions defined with `defrpc` to the Castra ring middleware.
 
 <img src="img/parts-api.png" width="100" align="right">
 
@@ -109,7 +110,8 @@ RPC interface. This is accomplished with `castra.core/defrpc`:
 This defines the `get-record` and `update-record` functions, which can be
 tested in the REPL.
 
-A typical [ring][ring] middleware stack to serve these endpoints:
+With the API namespace in place, we can add Castra middleware to our ring
+stack and configure it to allow access to this namespace from the client:
 
 <img src="img/parts-ring.png" width="100" align="right">
 
