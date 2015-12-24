@@ -177,9 +177,12 @@ Here is a simple [Hoplon][hoplon] page that satisfies these requirements:
   (body
     (p :toggle loading?                             ; show when processing commands
       (text "Processing ~{loading?} requests..."))
+
     (p :toggle error-message                        ; show when an operation fails
       (text "Error: ~{error-message}"))
+
     (p (text "Record: ~{c/record}"))                ; display the current record
+
     (let [id (cell nil)]
       (form :submit #(c/get-record @id)             ; edit and submit to load record
         (p (label "Record ID: ")
