@@ -34,8 +34,6 @@ server communication.
 
 ## Overview
 
-<img src="img/parts.png" width="300" align="right">
-
 Castra spans the gap between server and client. This makes documentation
 a bit more difficult. This section will jump back and forth between client
 and server code &mdash; it should be understood that the server code is
@@ -43,6 +41,8 @@ Clojure and client is ClojureScript.
 
 The entire application can be separated into four main components, two on
 server and two on the client:
+
+<img src="img/parts.png" width="300" align="right">
 
 ##### Client
 
