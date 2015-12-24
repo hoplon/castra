@@ -103,7 +103,7 @@ tested in the REPL.
 
 A typical [ring][ring] middleware stack to serve these endpoints:
 
-<img src="img/parts-ring.png" width="100">
+<img src="img/parts-ring.png" width="100" align="left">
 
 ```clojure
 (ns my.handler
