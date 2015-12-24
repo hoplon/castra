@@ -155,12 +155,9 @@ The `mkremote` function takes four arguments, three of which are
 4. The **loading cell**, which will contain a vector of all in-flight RPC requests.
 
 This defines the `get-record` and `update-record` functions in the client,
-which can be called like any other ClojureScript function.
-
-#### Hoplon Example:
-
-Using the server and client code above, we can make a little webapp that
-shows us the contents of a record.
+which can be called like any other ClojureScript function. Using the server
+and client code above, we can make a little webapp that shows us the contents
+of a record.
 
 * The user interface will display the current record at the top of the page.
 * The user may enter an id into a text input to view a different record.
