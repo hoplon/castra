@@ -167,24 +167,24 @@ Here is a simple [Hoplon][hoplon] page that satisfies these requirements:
   (:require
     [my.client :as c]))
 
-(defc= loading?      (some-> c/loading seq count))      ; contains count of in-flight commands
-(defc= error-message (some-> c/error .-message))        ; contains the last command's error message
+(defc= loading?      (some-> c/loading seq count))  ; count of in-flight commands
+(defc= error-message (some-> c/error .-message))    ; last command's error message
 
-(c/get-record 1)                                        ; get record 1 when page first loads
+(c/get-record 1)                                    ; page load initialization
 
 (html
   (head)
   (body
-    (p :toggle loading?                                 ; show when things are being processed
+    (p :toggle loading?                             ; show when processing commands
       (text "Processing ~{loading?} requests..."))
 
-    (p :toggle error-message                            ; show when an operation fails
+    (p :toggle error-message                        ; show when an operation fails
       (text "Error: ~{error-message}"))
 
-    (p (text "Record: ~{c/record}"))                    ; display the current record
+    (p (text "Record: ~{c/record}"))                ; display the current record
 
     (let [id (cell nil)]
-      (form :submit #(c/get-record @id)                 ; edit and submit form to load record
+      (form :submit #(c/get-record @id)             ; edit and submit to load record
         (p (label "Record ID: ")
             (input :value id :keyup #(reset! id @%)))
         (p (button :type "submit" "submit"))))))
