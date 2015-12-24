@@ -44,10 +44,18 @@ Clojure and client is ClojureScript.
 The entire application can be separated into four main components, two on
 server and two on the client:
 
-* **UI** &mdash; user interface, in this example we use [Hoplon][hoplon] here.
-* **RPC** &mdash; manages clientside state and provides access to the server API.
-* **Web Server** &mdash; HTTP server and middleware, including Castra.
-* **API** &mdash; serverside RPC functions, business logic, etc.
+##### Client
+
+* **UI** &mdash; in this example we use [Hoplon][hoplon].
+* **RPC** &mdash; Castra provides the RPC interface to the backend API and
+  manages mapping server state to [Javelin][javelin] cells in the client.
+
+##### Server
+
+* **Web Server** &mdash; Castra [ring][ring] middleware accepts requests
+  from the Castra client and delegates to the application's RPC functions.
+* **API** &mdash; RPC functions that comprise the backend API, wrapping
+  business logic, etc.
 
 ### Server
 
