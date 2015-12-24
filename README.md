@@ -108,10 +108,9 @@ functions defined with `defrpc` to the Castra ring middleware.
 ```
 
 This defines the `get-record` and `update-record` functions, which can be
-tested in the REPL.
-
-With the API namespace in place, we can add Castra middleware to our ring
-stack and configure it to allow access to this namespace from the client:
+tested in the REPL. With the API namespace in place, we can add Castra
+middleware to our ring stack and configure it to allow access to this
+namespace from the client:
 
 <img src="img/parts-ring.png" width="100" align="right">
 
