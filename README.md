@@ -121,6 +121,8 @@ Castra provides a ClojureScript library for creating the RPC stub functions
 the client will call. These are constructed by the `castra.core/mkremote`
 function.
 
+<img src="img/parts-rpc.png" width="100" align="right">
+
 ```clojure
 (ns my.client
   (:require
@@ -157,6 +159,8 @@ shows us the contents of a record.
 * The interface displays error messages when remote operations fail.
 
 Here is a simple [Hoplon][hoplon] page that satisfies these requirements:
+
+<img src="img/parts-ui.png" width="100" align="right">
 
 ```clojure
 (page "index.html"
