@@ -58,12 +58,12 @@ something like:
 
 ```clojure
 {:request-method :post
- :body "(my.app/update-record 123 {:x 1 :y 2})"}
+ :body "(my.api/update-record 123 {:x 1 :y 2})"}
 ```
 
 * The Castra middleware deserializes the body to obtain Clojure forms.
-* It then dispatches the expression `(my.app/update-record 123 {:x 1 :y 2})`
-  by resolving and attempting to call the function `my.app/update-record`.
+* It then dispatches the expression `(my.api/update-record 123 {:x 1 :y 2})`
+  by resolving and attempting to call the function `my.api/update-record`.
   (This function should be created with `castra.core/defrpc`, explained below.)
 * The Castra middleware then returns a ring response map with the serialized
   result in the `:body` and a 200 status.
@@ -72,7 +72,7 @@ You can think of the response as if it were this:
 
 ```clojure
 {:status 200
- :body (pr-str (my.app/update-record 123 {:x 1 :y 2}))}
+ :body (pr-str (my.api/update-record 123 {:x 1 :y 2}))}
 ```
 
 Obviously, we don't want the client to be able to evaluate arbitrary
@@ -83,19 +83,36 @@ RPC interface. This is accomplished with `castra.core/defrpc`:
 <img src="img/parts-api.png" width="100">
 
 ```clojure
-(ns my.app
+(ns my.api
   (:require
-    [castra.core :as c]
-    [some.database :as db]))
+    [some.database :as db]
+    [castra.core :refer [defrpc]]))
 
-(c/defrpc get-record
+(defrpc get-record
   [id]
   (first (db/query "SELECT * FROM record WHERE id = ?" id)))
 
-(c/defrpc update-record
+(defrpc update-record
   [id {:keys [x y]}]
   (db/execute "UPDATE IN record SET x = ?, y = ? WHERE id = ?" x y id)
   (get-record id))
+```
+
+This defines the `get-record` and `update-record` functions, which can be
+tested in the REPL.
+
+A typical [ring][ring] middleware stack to serve these endpoints:
+
+<img src="img/parts-ring.png" width="100">
+
+```clojure
+(ns my.handler
+  (:require
+    [castra.middleware :refer [wrap-castra]]))
+
+(def app
+  (-> (constantly {:status 404 :body "not found"})
+      (wrap-castra 'my.api)))
 ```
 
 ### Client
@@ -105,7 +122,7 @@ the client will call. These are constructed by the `castra.core/mkremote`
 function.
 
 ```clojure
-(ns my.app.client
+(ns my.client
   (:require
     [castra.core :as c]
     [javelin.core :as j :include-macros true]))
@@ -114,8 +131,8 @@ function.
 (j/defc error   nil)
 (j/defc loading nil)
 
-(def get-record    (c/mkremote 'my.app/get-record    record error loading))
-(def update-record (c/mkremote 'my.app/update-record record error loading))
+(def get-record    (c/mkremote 'my.api/get-record    record error loading))
+(def update-record (c/mkremote 'my.api/update-record record error loading))
 ```
 
 The `mkremote` function takes four arguments, three of which are
@@ -144,7 +161,7 @@ Here is a simple [Hoplon][hoplon] page that satisfies these requirements:
 ```clojure
 (page "index.html"
   (:require
-    [my.app.client :as c]))
+    [my.client :as c]))
 
 (defc= loading?      (some-> c/loading seq count))      ; contains count of in-flight commands
 (defc= error-message (some-> c/error .-message))        ; contains the last command's error message
@@ -236,3 +253,4 @@ Distributed under the Eclipse Public License, the same as Clojure.
 [nrepl]: https://github.com/clojure/tools.nrepl
 [hoplon]: https://github.com/hoplon/hoplon
 [javelin]: https://github.com/hoplon/javelin
+[ring]: https://github.com/ring-clojure/ring
