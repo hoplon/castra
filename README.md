@@ -80,7 +80,7 @@ expressions on the server (we already have [nREPL][nrepl] for that). We
 want to be able to mark certain functions as part of our application's
 RPC interface. This is accomplished with `castra.core/defrpc`:
 
-<img src="img/parts-api.png" width="100">
+<img src="img/parts-api.png" width="100" align="right">
 
 ```clojure
 (ns my.api
@@ -103,7 +103,7 @@ tested in the REPL.
 
 A typical [ring][ring] middleware stack to serve these endpoints:
 
-<img src="img/parts-ring.png" width="100" align="left">
+<img src="img/parts-ring.png" width="100" align="right">
 
 ```clojure
 (ns my.handler
