@@ -8,6 +8,7 @@
     [ring.util.request              :as q :refer [body-string]]
     [clojure.set                    :as s :refer [intersection difference]]
     [castra.core                    :as r :refer [ex ex? dfl-ex *pre* *request* *session* *validate-only*]]
+    [clojure.tools.logging          :as log]
     [clojure.stacktrace             :as u :refer [print-cause-trace print-stack-trace]])
   (:import
     [java.util.regex Pattern]
@@ -84,7 +85,9 @@
             "the secret key must be 16 bytes")
     (fn [req]
       (if-not (and (get-in req [:headers "x-castra-csrf"]) (= :post (:request-method req)))
-        (handler req)
+        (do
+          (when (= :post (:request-method req)) (log/debug "no x-castra-csrf header; passing through"))
+          (handler req))
         (let [now    (System/currentTimeMillis)
               sess?  (contains? (:headers req) "x-castra-session")
               raw    (get-in req [:headers "x-castra-session"])
@@ -110,7 +113,9 @@
         vars (fn [] (->> nses (map seq*) (mapcat #(apply select-vars %)) set))]
     (fn [req]
       (if-not  (and (get-in req [:headers "x-castra-csrf"]) (= :post (:request-method req)))
-        (handler req)
+        (do
+          (when  (= :post (:request-method req)) (log/debug "no x-castra-csrf header; passing through"))
+          (handler req))
         (binding [*print-meta*    true
                   *pre*           true
                   *request*       req
