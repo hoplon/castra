@@ -103,7 +103,7 @@
                 (assoc-in [:headers "X-Castra-Session"] data'))))))))
 
 (defn wrap-castra [handler & [opts & more :as namespaces]]
-  (let [{:keys [body-keys] :as opts} (when (map? opts) opts)
+  (let [{:keys [body-keys state-fn] :as opts} (when (map? opts) opts)
         nses (if opts more namespaces)
         head {"X-Castra-Tunnel" "transit"}
         seq* #(or (try (seq %) (catch Throwable e)) [%])
@@ -118,7 +118,7 @@
                   *validate-only* (= "true" (get-in req [:headers "x-castra-validate-only"]))]
           (let [h (headers req head {"Content-Type" "application/json"})
                 f #(do (csrf!) (do-rpc (vars) (expression body-keys req)))
-                d (try (response body-keys req {:ok (f)})
+                d (try (response body-keys req {:result (f) :state (when state-fn (state-fn))})
                        (catch Throwable e
                          (response body-keys req {:error (ex->clj e)})))]
             {:status 200, :headers h, :body d, :session @*session*}))))))
