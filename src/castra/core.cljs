@@ -106,8 +106,8 @@
                     :credentials true
                     :on-error    identity
                     :ajax-fn     ajax-fn
-                    :json->clj   (partial t/read (t/reader :json))
-                    :clj->json   (partial t/write (t/writer :json))
+                    :json->clj   (partial t/read  (t/reader :json (:reader-opts opts)))
+                    :clj->json   (partial t/write (t/writer :json (:writer-opts opts)))
                     :url         (.. js/window -location -href)})))
 
 (defn mkremote
