@@ -1,10 +1,10 @@
 (merge-env!
-  :dependencies '[[adzerk/bootlaces           "0.1.11" :scope "test"]
-                  [ring/ring                  "1.2.1"  :scope "test"]
+  :dependencies '[[adzerk/bootlaces           "0.1.13" :scope "test"]
+                  [ring/ring                  "1.4.0"  :scope "test"]
                   [org.clojure/clojure        "1.5.1"]
                   [ring/ring-core             "1.4.0"]
-                  [com.cognitect/transit-clj  "0.8.281"]
-                  [com.cognitect/transit-cljs "0.8.225"]])
+                  [com.cognitect/transit-clj  "0.8.285"]
+                  [com.cognitect/transit-cljs "0.8.237"]])
 
 (require '[adzerk.bootlaces :refer :all])
 
