@@ -73,6 +73,11 @@
 
 (def default-timeout (* 1000 60 60 24))
 
+(defn- castra-req?
+  [req]
+  (and (get-in req [:headers "x-castra-csrf"])
+       (= :post (:request-method req))))
+
 (defn wrap-castra-session [handler ^String key & [{:keys [timeout]}]]
   (let [key     (.getBytes key)
         seal    (var-get #'ring.middleware.session.cookie/seal)
@@ -83,7 +88,7 @@
                  (= (count key) 16))
             "the secret key must be 16 bytes")
     (fn [req]
-      (if-not (= :post (:request-method req))
+      (if-not (castra-req? req)
         (handler req)
         (let [now    (System/currentTimeMillis)
               sess?  (contains? (:headers req) "x-castra-session")
@@ -109,7 +114,7 @@
         seq* #(or (try (seq %) (catch Throwable e)) [%])
         vars (fn [] (->> nses (map seq*) (mapcat #(apply select-vars %)) set))]
     (fn [req]
-      (if-not (= :post (:request-method req))
+      (if-not (castra-req? req)
         (handler req)
         (binding [*print-meta*    true
                   *pre*           true
@@ -119,8 +124,8 @@
           (let [h (headers req head {"Content-Type" "application/json"})
                 f #(do (csrf!) (do-rpc (vars) (expression body-keys req)))
                 d (try (response body-keys req {:ok (f)})
-                       (catch Throwable e
-                         (response body-keys req {:error (ex->clj e)})))]
+                      (catch Throwable e
+                        (response body-keys req {:error (ex->clj e)})))]
             {:status 200, :headers h, :body d, :session @*session*}))))))
 
 ;; AJAX Crawling Middleware ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
