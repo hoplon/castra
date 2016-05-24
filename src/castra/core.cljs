@@ -93,8 +93,8 @@
     (-> prom'
         (.done (fn [{:keys [headers body]}]
                  (set-session (get headers "X-Castra-Session"))
-                 (let [{:keys [ok error]} (resp body)]
-                   (or (and (not error) (.resolve prom ok))
+                 (let [{:keys [error] :as resp} (resp body)]
+                   (or (and (not error) (.resolve prom resp))
                        (.reject prom (doto (make-ex error) on-error))))))
         (.fail (fn [{:keys [headers body status status-text]}]
                  (.reject prom (doto (ajax-ex status status-text) on-error)))))
@@ -123,8 +123,8 @@
       (let [prom' (-> (ajax (with-default-opts opts) `[~endpoint ~@args])
                       (.done   #(do (when live?
                                       (reset! error nil)
-                                      (reset! state %))
-                                    (.resolve prom %)))
+                                      (reset! state (or (:state %) (:result %))))
+                                    (.resolve prom (:result %))))
                       (.fail   #(do (when live? (reset! error %))
                                     (.reject prom %)))
                       (.always #(when live? (swap! loading unload))))]
