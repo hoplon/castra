@@ -1,5 +1,4 @@
 (ns castra.middleware
-  (import java.io.File)
   (:require
     [clojure.java.shell             :as sh]
     [cognitect.transit              :as t]
@@ -10,6 +9,7 @@
     [castra.core                    :as r :refer [ex ex? dfl-ex *pre* *request* *session* *validate-only*]]
     [clojure.stacktrace             :as u :refer [print-cause-trace print-stack-trace]])
   (:import
+    [java.io File]
     [java.util.regex Pattern]
     [java.io ByteArrayInputStream ByteArrayOutputStream]))
 
