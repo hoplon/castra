@@ -7,7 +7,9 @@
 ;; You must not remove this notice, or any other, from this software.
 
 (ns castra.core
-  (:require [cognitect.transit :as t]))
+  (:require
+    [cognitect.transit :as t]
+    [cljsjs.jquery]))
 
 ;; helpers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
