@@ -4,13 +4,13 @@
                   [org.clojure/clojure        "1.5.1"]
                   [ring/ring-core             "1.4.0"]
                   [com.cognitect/transit-clj  "0.8.285"]
-                  [com.cognitect/transit-cljs "0.8.237"]
+                  [com.cognitect/transit-cljs "0.8.239"]
                   [cljsjs/jquery              "2.2.4-0"]])
 
 (require
   '[adzerk.bootlaces :refer :all])
 
-(def +version+ "3.0.0-alpha6")
+(def +version+ "3.0.0-alpha7")
 
 (bootlaces! +version+)
 
