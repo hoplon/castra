@@ -28,7 +28,7 @@
                   (try (print-stack-trace e)
                        (catch Throwable x
                          (printf "No stack trace: %s" (.getMessage x))))))))
-       (assoc (ex-data e) :stack stack)))
+       (assoc (ex-data e) :stack)))
 
 (defn- csrf! []
   (when-not (get-in *request* [:headers "x-castra-csrf"])
