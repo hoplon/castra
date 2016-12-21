@@ -39,7 +39,7 @@
   [ex]
   (if (ex? ex)
     ex
-    (let [{:keys [status message stack case]} ex]
+    (let [{:keys [status message stack cause]} ex]
       (doto (ex-info message ex cause)
         (aset "serverStack" stack)
         (aset "status" status)))))

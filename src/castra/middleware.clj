@@ -123,6 +123,7 @@
                 f #(do (csrf!) (do-rpc (vars) (expression body-keys req)))
                 d (try (response body-keys req {:result (f) :state (when state-fn (state-fn))})
                        (catch Throwable e
+                         (.printStackTrace e)
                          (response body-keys req {:error (ex->clj e)})))]
             {:status 200, :headers h, :body d, :session @*session*}))))))
 
