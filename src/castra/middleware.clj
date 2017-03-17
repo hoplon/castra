@@ -121,7 +121,7 @@
                   *request*       req
                   *session*       (atom (:session req))
                   *validate-only* (= "true" (get-in req [:headers "x-castra-validate-only"]))]
-          (let [h (headers req head {"Content-Type" "application/json"})
+          (let [h (headers req head {"Content-Type" "application/json;charset=utf-8"})
                 f #(do (csrf!) (do-rpc (vars) (expression body-keys req)))
                 d (try (response body-keys req {:result (f) :state (when state-fn (state-fn))})
                        (catch Throwable e
