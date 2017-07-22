@@ -122,11 +122,11 @@
                   *session*       (atom (:session req))
                   *validate-only* (= "true" (get-in req [:headers "x-castra-validate-only"]))]
           (let [h (headers req head {"Content-Type" "application/json;charset=utf-8"})
-                f #(do (csrf!) (do-rpc (vars) (expression body-keys req)))
-                d (try (response body-keys req {:result (f) :state (when state-fn (state-fn))})
-                       (catch Throwable e
-                         (response body-keys req {:error (ex->clj e)})))]
-            {:status 200, :headers h, :body d, :session @*session*}))))))
+                r {:status 200, :headers h, :session @*session*}
+                f #(do (csrf!) (do-rpc (vars) (expression body-keys req)))]
+            (try (assoc r :body (response body-keys req {:result (f) :state (when state-fn (state-fn))}))
+                 (catch Throwable e
+                   (assoc r :status 500 :body (response body-keys req {:error (ex->clj e)}))))))))))
 
 ;; AJAX Crawling Middleware ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
