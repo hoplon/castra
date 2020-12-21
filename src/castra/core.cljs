@@ -80,12 +80,15 @@
                          (when x (.setItem js/localStorage storage-key x))))
 
 (defn- ajax
-  [{:keys [ajax-fn clj->json json->clj on-error] :as opts} expr]
+  [{:keys [ajax-fn clj->json json->clj on-error additional-headers] :as opts} expr]
   (let [prom    (.Deferred js/jQuery)
         headers (-> {"X-Castra-Csrf"          "true"
                      "X-Castra-Tunnel"        "transit"
                      "X-Castra-Validate-Only" (str (boolean *validate-only*))
                      "Accept"                 "application/transit+json"}
+                    (merge (if (instance? javeline.core.Cell additional-headers)
+                               @additional-headers
+                               additional-headers))
                     (assoc-when "X-Castra-Session" (get-session)))
         body    (if (string? expr) expr (clj->json expr))
         wrap-ex #(make-ex {:message "Server Error" :cause %})
