@@ -86,7 +86,7 @@
                      "X-Castra-Tunnel"        "transit"
                      "X-Castra-Validate-Only" (str (boolean *validate-only*))
                      "Accept"                 "application/transit+json"}
-                    (merge (if (instance? javeline.core.Cell additional-headers)
+                    (merge (if (instance? javelin.core.Cell additional-headers)
                                @additional-headers
                                additional-headers))
                     (assoc-when "X-Castra-Session" (get-session)))
