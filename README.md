@@ -7,7 +7,7 @@ Web application RPC library for Clojure/Script and Ring.
 
 [](dependency)
 ```clojure
-[hoplon/castra "3.0.0-alpha7"] ;; latest release
+[hoplon/castra "3.0.0-alpha8"] ;; latest release
 ```
 [](/dependency)
 

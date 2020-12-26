@@ -6,7 +6,7 @@
     [clojure.string                 :as string]
     [ring.util.request              :as q :refer [body-string]]
     [clojure.set                    :as s :refer [intersection difference]]
-    [castra.core                    :as r :refer [ex ex? dfl-ex *pre* *request* *session* *validate-only*]]
+    [castra.core                    :as r :refer [*pre* *request* *session* *validate-only*]]
     [clojure.stacktrace             :as u :refer [print-cause-trace print-stack-trace]])
   (:import
     [java.io File]
@@ -21,16 +21,14 @@
   (string/replace string ansi-pattern ""))
 
 (defn- ex->clj [e]
-  (let [e (if (ex? e) e (dfl-ex e))]
-    {:message (.getMessage e)
-     :data    (ex-data e)
-     :stack   (strip-ansi
-                (with-out-str
-                  (try (print-cause-trace e)
+  (->> (strip-ansi
+         (with-out-str
+           (try (print-cause-trace e)
+                (catch Throwable x
+                  (try (print-stack-trace e)
                        (catch Throwable x
-                         (try (print-stack-trace e)
-                              (catch Throwable x
-                                (printf "No stack trace: %s" (.getMessage x))))))))}))
+                         (printf "No stack trace: %s" (.getMessage x))))))))
+       (assoc (ex-data e) :stack)))
 
 (defn- csrf! []
   (when-not (get-in *request* [:headers "x-castra-csrf"])
@@ -125,6 +123,7 @@
                 f #(do (csrf!) (do-rpc (vars) (expression body-keys req)))
                 d (try (response body-keys req {:result (f) :state (when state-fn (state-fn))})
                        (catch Throwable e
+                         (.printStackTrace e)
                          (response body-keys req {:error (ex->clj e)})))]
             {:status 200, :headers h, :body d, :session @*session*}))))))
 
